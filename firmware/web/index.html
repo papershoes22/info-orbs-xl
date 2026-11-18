@@ -1,0 +1,630 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b0e14">
+<title>Info Orbs</title>
+<style>
+:root{--bg:#0b0e14;--card:#141922;--card2:#1b2230;--line:#263043;--text:#e7ecf3;--dim:#93a0b4;--faint:#5f6b7e;
+--accent:#4aff00;--accent-ink:#0b1400;--bad:#ff5a5f;--warn:#ffc34d;--ok:#3ddc84;--r:14px}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--text);font:16px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+body{padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+.wrap{max-width:760px;margin:0 auto;padding:12px 14px 96px}
+header{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:4px 2px 10px}
+h1{font-size:20px;margin:0;font-weight:650;letter-spacing:.2px}
+.conn{display:flex;align-items:center;gap:7px;font-size:14px;color:var(--dim)}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--faint)}
+.dot.ok{background:var(--ok);box-shadow:0 0 8px var(--ok)}.dot.bad{background:var(--bad)}
+.orbs{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin:0 0 12px}
+.orb{aspect-ratio:1;border-radius:50%;background:#000;border:2px solid #222b3a;overflow:hidden;position:relative}
+.orb img{width:100%;height:100%;object-fit:cover;display:block}
+.orb span{position:absolute;bottom:3px;left:0;right:0;text-align:center;font-size:10px;color:#ffffffaa;text-shadow:0 0 3px #000}
+.top{position:sticky;top:0;z-index:5;background:var(--bg);margin:0 -14px 12px;padding:6px 14px;border-bottom:1px solid var(--line)}
+nav{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+nav button{border:1px solid var(--line);background:var(--card);color:var(--dim);border-radius:999px;
+padding:10px 4px;font:inherit;font-size:14px;min-height:44px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tools{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 6px}
+.trybox{display:flex;align-items:center;gap:8px;color:var(--dim);font-size:14px}
+.trybar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:#2b2410;border:1px solid #5a4a1d;color:#ffe7a8;border-radius:12px;padding:8px 10px;margin:0 0 6px;font-size:14px}
+.trybar span{flex:1 1 auto}
+.sub{background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:2px 12px;margin:6px 0 10px}
+.sub h3{font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(--faint);margin:10px 0 2px;font-weight:600}
+.days{display:flex;gap:4px;flex-wrap:wrap}.days button{min-width:40px}
+.sub .seg button{padding:8px 8px;min-width:0}.sub .row .lbl{white-space:nowrap}
+textarea{font:inherit;color:var(--text);background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:9px 10px;width:100%;min-height:64px}
+nav button.on{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:650}
+section{display:none}section.on{display:block}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:4px 14px;margin:0 0 12px}
+.card h2{font-size:13px;text-transform:uppercase;letter-spacing:1px;color:var(--dim);margin:12px 0 4px;font-weight:600}
+.row{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:56px;padding:8px 0;border-top:1px solid var(--line)}
+.card h2+.row,.card .row:first-child{border-top:0}
+.row label,.row .lbl{flex:1 1 auto;min-width:0}
+.row .lbl small,.note{display:block;color:var(--faint);font-size:13px;margin-top:2px}
+.ctl{flex:0 0 auto;display:flex;align-items:center;gap:8px}
+select,input[type=text],input[type=number],input[type=time],input[type=datetime-local]{font:inherit;color:var(--text);background:var(--card2);
+border:1px solid var(--line);border-radius:10px;padding:9px 10px;min-height:44px;max-width:210px}
+input[type=number]{width:96px}input[type=text]{width:190px}input.wide-num{width:132px}
+input[type=color]{width:52px;height:44px;border:1px solid var(--line);border-radius:10px;background:var(--card2);padding:4px}
+input[type=range]{width:170px;accent-color:var(--accent);height:44px}
+.val{min-width:42px;text-align:right;color:var(--dim);font-variant-numeric:tabular-nums}
+.sw{position:relative;width:60px;height:44px;flex:0 0 auto}
+.sw input{opacity:0;width:100%;height:100%;margin:0;position:absolute;cursor:pointer;z-index:1}
+.sw i{position:absolute;left:0;right:0;top:6px;bottom:6px;border-radius:999px;background:#334055;transition:.15s}
+.sw i:after{content:"";position:absolute;width:26px;height:26px;left:3px;top:3px;border-radius:50%;background:#fff;transition:.15s}
+.sw input:checked+i{background:var(--accent)}.sw input:checked+i:after{left:31px;background:var(--accent-ink)}
+.seg{display:flex;background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:3px;gap:3px;flex-wrap:wrap}
+.seg button{border:0;background:transparent;color:var(--dim);font:inherit;font-size:14px;padding:8px 11px;border-radius:8px;min-height:40px;min-width:44px;cursor:pointer}
+.seg button.on{background:var(--accent);color:var(--accent-ink);font-weight:650}
+.btn{font:inherit;border:1px solid var(--line);background:var(--card2);color:var(--text);border-radius:10px;padding:10px 14px;min-height:44px;cursor:pointer}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:650}
+.btn.danger{border-color:#5a2a30;color:#ffb3b6}
+.btn:disabled{opacity:.45}
+.sets{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;padding:10px 0}
+.sets button{font:inherit;text-align:left;border:1px solid var(--line);background:var(--card2);color:var(--text);border-radius:12px;padding:12px;min-height:56px;cursor:pointer}
+.sets button.on{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.sets button:disabled{opacity:.4}
+.sets button small{display:block;color:var(--faint);font-size:12px}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;padding:10px 0}
+.stat{background:var(--card2);border-radius:12px;padding:10px 12px}
+.stat b{display:block;font-size:12px;color:var(--faint);font-weight:600;text-transform:uppercase;letter-spacing:.8px}
+.stat span{display:block;margin-top:2px;overflow-wrap:anywhere}
+.order .row .ctl .btn{padding:8px 12px;min-width:44px}
+.err{color:var(--bad);font-size:13px;display:block}
+.results{padding:0 0 8px}.results button{display:block;width:100%;text-align:left;margin:6px 0}
+.banner{display:none;background:#3a1b1f;border:1px solid #5a2a30;color:#ffd6d8;border-radius:12px;padding:10px 12px;margin:0 0 12px}
+.banner.on{display:block}
+#toast{display:none;margin:8px 0 2px;padding:9px 12px;border-radius:12px;background:#16301b;border:1px solid #2c5a33;color:#c9f5cf;font-size:14px}
+#toast.on{display:block}#toast.bad{background:#3a1b1f;border-color:#5a2a30;color:#ffd6d8}
+.wide{width:100%}.mono{font-variant-numeric:tabular-nums}
+.press{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:10px 0}
+.pcol{display:flex;flex-direction:column;gap:6px;min-width:0}
+.pcol b{font-size:12px;color:var(--faint);font-weight:600;text-transform:uppercase;letter-spacing:.8px;text-align:center}
+.pcol .btn{padding:10px 4px;white-space:nowrap}
+@media (max-width:420px){.row{flex-wrap:wrap}.row .ctl{width:100%;justify-content:flex-end}input[type=range]{flex:1;width:auto}.row .ctl.full{justify-content:stretch}}
+@media (min-width:700px){.sets{grid-template-columns:repeat(5,1fr)}.grid{grid-template-columns:repeat(3,1fr)}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header><h1>Info Orbs</h1><div class="conn"><span class="dot" id="dot"></span><span id="conn">Connecting…</span></div></header>
+<div class="banner" id="banner"></div>
+<div class="orbs" id="orbs"></div>
+<div class="top"><div id="tools"></div><nav id="tabs"></nav><div id="toast" role="status" aria-live="polite"></div></div>
+<main id="main"></main>
+</div>
+<script>
+"use strict";
+const $ = (s, e = document) => e.querySelector(s);
+const el = (tag, attrs = {}, ...kids) => {
+  const e = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) {
+    if (k === "class") e.className = v; else if (k.startsWith("on")) e.addEventListener(k.slice(2), v);
+    else if (v !== false && v != null) e.setAttribute(k, v === true ? "" : v);
+  }
+  for (const k of kids.flat(Infinity)) if (k != null && k !== false) e.append(k.nodeType ? k : document.createTextNode(k));
+  return e;
+};
+let S = null, ST = null, META = null, tab = "now", online = false;
+const get = (path) => path.split(".").reduce((o, k) => (o == null ? o : o[k]), S);
+function patchOf(path, value) {               // "clock.color" -> {clock: {color: value}}
+  const keys = path.split("."), out = {};
+  let o = out;
+  keys.slice(0, -1).forEach((k) => (o = o[k] = {}));
+  o[keys[keys.length - 1]] = value;
+  return out;
+}
+let toastT;
+function toast(msg, bad) {
+  const t = $("#toast"); t.textContent = msg; t.className = "on" + (bad ? " bad" : "");
+  clearTimeout(toastT); toastT = setTimeout(() => (t.className = bad ? "bad" : ""), bad ? 4000 : 1400);
+}
+async function api(path, body) {
+  const r = await fetch(path, body === undefined ? {cache: "no-store"} :
+    {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(body)});
+  if (!r.ok) throw new Error("the orbs answered " + r.status);
+  return r.json();
+}
+const errs = {};
+// redraw: false for a field that already shows what was picked (colour, slider, number, text, list): redrawing would
+// replace it, and on a phone that closes an open colour picker mid-drag (2026-11-17)
+const HIST = [];                               // undo: the last 20 changes (where, what it was before)
+let undoing = false;
+const deep = (x) => (x === undefined ? undefined : JSON.parse(JSON.stringify(x)));
+async function change(path, value, redraw = true) {
+  let ok = false;
+  const before = deep(get(path));
+  try {
+    const r = await api("/api/settings", patchOf(path, value));
+    if (r.ok) { S = r.settings; ok = true; const had = path in errs; delete errs[path];
+      if (!undoing && JSON.stringify(before) !== JSON.stringify(value)) { HIST.push({path, before}); if (HIST.length > 20) HIST.shift(); }
+      toast(ST && ST.try && ST.try.active ? "On the orbs: trying, not saved yet" : "Saved on the orbs"); if (had) redraw = true; drawTools(); }
+    else { Object.assign(errs, r.errors || {}); toast(Object.values(r.errors || {})[0] || "Not saved", true); }
+  } catch (e) { toast("Not saved: " + e.message, true); }
+  if (redraw || !ok) render();
+}
+async function undo() {
+  const h = HIST.pop(); if (!h) return;
+  undoing = true;
+  try { await change(h.path, h.before); } finally { undoing = false; }
+  render();
+}
+function drawTools() {
+  const t = (ST && ST.try) || {active: false};
+  $("#tools").replaceChildren(
+    el("div", {class: "tools"},
+      el("div", {class: "trybox"}, el("span", {}, "Try first"), el("label", {class: "sw"}, el("input", {type: "checkbox", checked: !!t.active,
+        "aria-label": "try first", onchange: (e) => act({do: e.target.checked ? "try" : "keep"},
+          e.target.checked ? "Trying: changes show but aren't saved" : "Kept and saved")}), el("i"))),
+      el("button", {class: "btn", type: "button", disabled: !HIST.length, "aria-label": "undo", onclick: undo},
+        HIST.length ? `Undo (${HIST.length})` : "Undo")),
+    t.active ? el("div", {class: "trybar"}, el("span", {}, `Trying: back to the saved settings in ${t.left_s ?? 30} s unless kept`),
+      el("button", {class: "btn primary", type: "button", "aria-label": "keep", onclick: () => act({do: "keep"}, "Kept and saved")}, "Keep"),
+      el("button", {class: "btn", type: "button", "aria-label": "put back", onclick: () => act({do: "revert"}, "Put back")}, "Put back")) : "");
+}
+const debounced = {};
+function changeSoon(path, value, ms = 350) { clearTimeout(debounced[path]); debounced[path] = setTimeout(() => change(path, value, false), ms); }
+async function act(body, ok) {
+  try { const r = await api("/api/action", body); if (r.ok) { if (ok) toast(ok); poll(); } else toast(r.error || "The orbs said no", true); }
+  catch (e) { toast(e.message, true); }
+}
+
+/* ---- controls ---- */
+function row(label, note, ctl, path) {
+  return el("div", {class: "row"}, el("div", {class: "lbl"}, label, note ? el("small", {}, note) : null,
+    path && errs[path] ? el("span", {class: "err"}, errs[path]) : null), el("div", {class: "ctl"}, ctl));
+}
+function sw(path, onchange) {
+  return el("label", {class: "sw"}, el("input", {type: "checkbox", checked: !!get(path), "aria-label": path,
+    onchange: (e) => (onchange ? onchange(e.target.checked) : change(path, e.target.checked))}), el("i"));
+}
+function seg(path, opts, onpick, shown) {
+  const cur = shown !== undefined ? shown : get(path);
+  return el("div", {class: "seg", role: "group"}, opts.map(([v, t]) => el("button", {class: String(cur) === String(v) ? "on" : "",
+    type: "button", onclick: () => (onpick ? onpick(v) : change(path, v))}, t)));
+}
+function sel(path, opts, onpick) {
+  const cur = get(path);
+  return el("select", {"aria-label": path, onchange: (e) => (onpick ? onpick(e.target.value) : change(path, e.target.value, false))},
+    opts.map(([v, t]) => el("option", {value: v, selected: String(cur) === String(v)}, t)));
+}
+function num(path, min, max, step = 1) {
+  return el("input", {type: "number", min, max, step, value: get(path), inputmode: step === "any" ? "decimal" : "numeric", "aria-label": path,
+    class: step === "any" ? "wide-num" : null,
+    onchange: (e) => change(path, Number(e.target.value), false)});
+}
+function txt(path, max) {
+  return el("input", {type: "text", maxlength: max, value: get(path) ?? "", "aria-label": path, autocapitalize: "off",
+    spellcheck: "false", onchange: (e) => change(path, e.target.value.trim(), false)});
+}
+function color(path) {
+  // the orbs follow while the colour is dragged; the picker's own "done" (change) sends the final one at once
+  return el("input", {type: "color", value: get(path), "aria-label": path,
+    oninput: (e) => changeSoon(path, e.target.value, 200),
+    onchange: (e) => { clearTimeout(debounced[path]); change(path, e.target.value, false); }});
+}
+function slider(path, min, max, fmt = (v) => v) {
+  const out = el("span", {class: "val"}, fmt(get(path)));
+  return [el("input", {type: "range", min, max, value: get(path), "aria-label": path,
+    oninput: (e) => { out.textContent = fmt(Number(e.target.value)); changeSoon(path, Number(e.target.value)); }}), out];
+}
+const setTitle = (k) => (META.sets.find((s) => s.key === k) || {title: k}).title;
+const camTitle = (id) => (META.cams.find((c) => c.id === id) || {title: id}).title;
+const ago = (s) => s == null ? "–" : s < 90 ? `${Math.round(s)} s ago` : s < 5400 ? `${Math.round(s / 60)} min ago` : `${(s / 3600).toFixed(1)} h ago`;
+const upFor = (s) => s < 3600 ? `${Math.round(s / 60)} min` : s < 172800 ? `${(s / 3600).toFixed(1)} h` : `${(s / 86400).toFixed(1)} days`;
+
+/* ---- tabs ---- */
+const TABS = [["now", "Now"], ["sets", "Sets"], ["rules", "Rules"], ["messages", "Messages"], ["clock", "Clock"],
+  ["weather", "Weather"], ["matrix", "Matrix"], ["rig", "Rig"], ["screens", "Screens"], ["system", "System"]];
+const ACTION_TITLES = {own: "As always", nothing: "Nothing", prev_set: "Previous set", next_set: "Next set", qr: "Settings QR code",
+  dark: "Screens dark / on", play_pause: "Music play / pause", next_track: "Next song", prev_track: "Previous song",
+  cams_page: "Next camera page", clock_style: "Clock: Normal / Nixie", clock_format: "Clock: 12 / 24 h", middle_page: "Rig stats: middle orb's page",
+  brighter: "Brighter", dimmer: "Dimmer"};
+const THEME_TITLES = {own: "The set's own", ember: "Ember", ocean: "Ocean", forest: "Forest", mono: "Mono", neon: "Neon", sunset: "Sunset", ice: "Ice"};
+const STYLE_OPTS = [["own", "Own"], ["ring", "Ring"], ["needle", "Needle"], ["bar", "Bar"], ["number", "Number"]];
+let openSet = null;
+const per = (k, f) => `sets.per.${k}.${f}`;
+// what each of the XL's own five screens shows (weather.cpp, sets_new.cpp), in the order they're drawn
+const SCREEN_NAMES = {
+  weather: ["Time and date", "Weather in words, the city", "Weather picture", "Temperature, today's high and low",
+    "The next three days"],
+  hourly: ["Next hour", "In 2 hours", "In 3 hours", "In 4 hours", "In 5 hours"],
+  sky: ["Sunrise and day length", "Sunset", "The moon", "UV index", "Air quality"]};
+function faceOptions(k) {
+  const m = META.sets.find((s) => s.key === k) || {};
+  if (m.orbs === "screens") return [0, 1, 2, 3, 4].map((i) => [i, (SCREEN_NAMES[k] || [])[i] || `Screen ${i + 1}`]);
+  if (k === "messages") return [["blank", "Blank"], ...[...Array(8).keys()].map((i) => { const c = S.custom[i] || {};
+    return [i, `Message ${i + 1}${c.kind === "none" ? " (empty)" : ": " + (c.title || c.text || "").slice(0, 18)}`]; })];
+  const cat = ST.catalog && ST.catalog.sets && ST.catalog.sets[k];
+  const names = cat && cat.faces && cat.faces.length ? cat.faces : [0, 1, 2, 3, 4].map((i) => `Face ${i + 1}`);
+  // (the rig's list is by face id, with gaps; its "Message N" faces are the Messages tab's, shown with their words)
+  const named = (t, i) => { const m = /^Message (\d)$/.exec(t || ""); if (!m) return t; const c = S.custom[Number(m[1]) - 1] || {};
+    return `${t}${c.kind === "none" ? " (empty)" : ": " + (c.title || c.text || "").slice(0, 18)}`; };
+  return [["blank", "Blank"], ...names.map((t, i) => [i, named(t, i)]).filter(([, t]) => t)];
+}
+function setPanel(k) {
+  const m = META.sets.find((s) => s.key === k) || {};
+  const faces = get(per(k, "faces")), styles = get(per(k, "styles")), own = get(per(k, "brightness")) > 0;
+  // (what the rig can do for this set, from its catalogue: colour themes, gauge styles; nothing offered that does nothing)
+  const cat = (ST.catalog && ST.catalog.sets && ST.catalog.sets[k]) || {};
+  const placeFace = (i, v) => {
+    const f = faces.slice(), nv = v === "blank" ? "blank" : Number(v);
+    if (m.orbs === "screens") { const j = f.indexOf(nv); if (j >= 0) f[j] = f[i]; }   // (each screen once: the two swap)
+    f[i] = nv; change(per(k, "faces"), f);
+  };
+  const btnSel = (b, kind) => {
+    const path = `${per(k, "buttons")}.${b}.${kind}`;
+    const opts = [...META.actions.map((a) => [a, ACTION_TITLES[a] || a]), ...META.sets.map((s) => [`show:${s.key}`, `Show ${s.title}`])];
+    return sel(path, opts);
+  };
+  return el("div", {class: "sub"},
+    el("h3", {}, "Its turn and brightness"),
+    row("Its turn in the cycle", "0 = the general setting (Going round by themselves)", [num(per(k, "cycle_s"), 0, 3600), el("span", {class: "val"}, "s")], per(k, "cycle_s")),
+    row("Its own brightness", own ? null : "Off: the general brightness", el("label", {class: "sw"}, el("input", {type: "checkbox", checked: own,
+      "aria-label": `${k} own brightness`, onchange: (e) => change(per(k, "brightness"), e.target.checked ? 160 : 0)}), el("i"))),
+    own ? row("Brightness", null, slider(per(k, "brightness"), 10, 255, (v) => `${Math.round(v / 2.55)} %`), per(k, "brightness")) : null,
+    m.rig && cat.themes ? row("Colours", "The rig draws this set in these colours", sel(per(k, "theme"), META.themes.map((t) => [t, THEME_TITLES[t] || t])), per(k, "theme")) : null,
+    el("h3", {}, "Which face on which orb"),
+    m.orbs === "together" ? el("small", {class: "note"}, "This set's five orbs make one picture together: nothing to place.")
+      : (ST.catalog && ST.catalog.sets && ST.catalog.sets[k] && ST.catalog.sets[k].note) ? el("small", {class: "note"}, ST.catalog.sets[k].note)
+      : [0, 1, 2, 3, 4].map((i) => row(`Orb ${i + 1}`, null, sel(`${per(k, "faces")}.${i}`, faceOptions(k), (v) => placeFace(i, v)), per(k, "faces"))),
+    m.rig && cat.styles ? [el("h3", {}, "Gauge style"), el("small", {class: "note"}, "On faces with a gauge: a ring, a needle, a bar, or the number alone."),
+      [0, 1, 2, 3, 4].map((i) => row(`Orb ${i + 1}`, null, seg(`${per(k, "styles")}.${i}`, STYLE_OPTS,
+        (v) => { const g = styles.slice(); g[i] = v; change(per(k, "styles"), g); })))] : null,
+    el("h3", {}, "Buttons on this set"),
+    ...["left", "middle", "right"].flatMap((b) => ["short", "medium", "long"].map((kind) =>
+      row(`${b[0].toUpperCase() + b.slice(1)}, ${kind === "short" ? "a press" : kind === "medium" ? "held ½ s" : "held 2 s"}`, null, btnSel(b, kind), `${per(k, "buttons")}.${b}.${kind}`))));
+}
+// the orbs' three buttons from here: each goes through the orbs' own press code, so it does exactly what that press on
+// the real button does on the set showing (the 15 s hold that wipes everything is left out on purpose)
+const PRESS_KINDS = [["short", "Press"], ["medium", "Hold ½ s"], ["long", "Hold 2 s"]];
+function pressCard() {
+  return el("div", {class: "card"}, el("h2", {}, "Press a button"),
+    el("small", {class: "note"}, "The same as pressing the orbs' own buttons, on the set showing now."),
+    el("div", {class: "press"}, ["left", "middle", "right"].map((b) => {
+      const name = b[0].toUpperCase() + b.slice(1);
+      return el("div", {class: "pcol"}, el("b", {}, name), PRESS_KINDS.map(([kind, t]) =>
+        el("button", {class: "btn", type: "button", "aria-label": `press ${b} ${kind}`,
+          onclick: () => act({do: "press", button: b, kind}, `${name}: ${t.toLowerCase()}`)}, t)));
+    })));
+}
+const VIEWS = {
+  now() {
+    const showing = ST.showing, rigOk = ST.rig && ST.rig.connected;
+    const sets = el("div", {class: "sets"}, S.sets.order.map((k) => {
+      const m = META.sets.find((s) => s.key === k), on = S.sets.enabled[k];
+      const away = m.rig && !rigOk && !(k === "cams" && ST.frigate && ST.frigate.state === "ok");
+      return el("button", {class: showing === k ? "on" : "", disabled: !on || away, type: "button",
+        onclick: () => act({do: "show", set: k})}, m.title, el("small", {}, !on ? "switched off" : away ? "rig away" : showing === k ? "showing" : ""));
+    }));
+    const w = ST.wifi || {};
+    return [
+      el("div", {class: "card"}, el("h2", {}, "Show now"), sets),
+      pressCard(),
+      presetsQuick(),
+      el("div", {class: "card"}, el("h2", {}, "Screens"),
+        row("Brightness", null, slider("screens.brightness", 10, 255, (v) => `${Math.round(v / 2.55)} %`), "screens.brightness"),
+        row("Screens dark", "Until you turn them on again (not saved)", el("label", {class: "sw"}, el("input", {type: "checkbox", checked: !!ST.dark,
+          "aria-label": "dark", onchange: (e) => act({do: "dark", on: e.target.checked}, e.target.checked ? "Screens dark" : "Screens on")}), el("i")))),
+      el("div", {class: "card"}, el("h2", {}, "Right now"), el("div", {class: "grid"},
+        stat("Time", ST.time), stat("Wi-Fi", w.ssid ? `${w.ssid}, ${w.rssi} dBm` : "not joined"),
+        stat("Address", w.ip ? `${w.host}.local · ${w.ip}` : "–"), stat("Rig", rigOk ? "connected" : "away"),
+        stat("Frigate backup", ST.frigate ? (ST.frigate.state === "ok" ? "working" : ST.frigate.state + (ST.frigate.error ? `: ${ST.frigate.error}` : "")) : "–"),
+        stat("Weather", ST.weather ? (ST.weather.ok ? `updated ${ago(ST.weather.age_s)}` : (ST.weather.error || "not yet")) : "–"),
+        stat("Orbs", `up ${upFor(ST.up_s)}, ${ST.temp_c.toFixed(1)} °C, ${ST.clk_mhz} MHz`))),
+    ];
+  },
+  sets() {
+    const order = S.sets.order;
+    const move = (i, d) => { const o = order.slice(); [o[i], o[i + d]] = [o[i + d], o[i]]; change("sets.order", o); };
+    return [
+      el("div", {class: "card order"}, el("h2", {}, "Order and on/off"),
+        el("small", {class: "note"}, "Left and right buttons go through the sets in this order, skipping the ones switched off. The rig's sets show only while the rig is there (Cameras also from Frigate)."),
+        order.map((k, i) => [row(setTitle(k), (META.sets.find((s) => s.key === k) || {}).rig ? "from the rig" : null,
+          [el("button", {class: "btn", type: "button", disabled: i === 0, "aria-label": `${k} up`, onclick: () => move(i, -1)}, "▲"),
+           el("button", {class: "btn", type: "button", disabled: i === order.length - 1, "aria-label": `${k} down`, onclick: () => move(i, 1)}, "▼"),
+           el("button", {class: "btn" + (openSet === k ? " primary" : ""), type: "button", "aria-label": `${k} customize`,
+             onclick: () => { openSet = openSet === k ? null : k; render(); }}, "⚙"),
+           sw(`sets.enabled.${k}`)]), openSet === k ? setPanel(k) : null])),
+      el("div", {class: "card"}, el("h2", {}, "Going round by themselves"),
+        row("Next set every", "0 = stay on one set", [num("sets.cycle_s", 0, 3600), el("span", {class: "val"}, "s")], "sets.cycle_s"),
+        row("At start-up show", null, sel("sets.start", [["last", "the last one shown"], ...order.map((k) => [k, setTitle(k)])]), "sets.start")),
+    ];
+  },
+  rules() {
+    const rules = deep(S.rules) || [];
+    const save = (list) => change("rules", list);
+    const setOpts = [["dark", "Screens dark"], ...META.sets.map((s) => [s.key, s.title])];
+    const DAYS = [["sun", "S"], ["mon", "M"], ["tue", "T"], ["wed", "W"], ["thu", "T"], ["fri", "F"], ["sat", "S"]];
+    const EVENTS = [["music", "music starts"], ["game", "a game runs"], ["rig_sleep", "the rig sleeps"],
+      ["person_door", "person at the door"], ["print_done", "a print finishes"]];
+    const edit = (i, f) => { const l = deep(rules); f(l[i]); save(l); };
+    return [
+      el("div", {class: "card"}, el("h2", {}, "Rules"),
+        el("small", {class: "note"}, "A time rule shows its set while the time is in its window, then goes back. An event rule shows its set when the rig sees the event: for so many seconds, or while it lasts (0). The first rule that fits wins."),
+        rules.map((r, i) => el("div", {class: "sub"},
+          row(`Rule ${i + 1}`, null, [seg(`rules.${i}.kind`, [["time", "Time"], ["event", "Event"]], (v) => edit(i, (x) => {
+            Object.keys(x).forEach((k) => delete x[k]); Object.assign(x, v === "time" ? {kind: "time", set: "clock", days: ["mon", "tue", "wed", "thu", "fri"], start: "07:00", end: "09:00"}
+              : {kind: "event", set: "music", event: "music", secs: 0}); }), r.kind),
+            el("button", {class: "btn danger", type: "button", "aria-label": `rule ${i + 1} remove`, onclick: () => { const l = deep(rules); l.splice(i, 1); save(l); }}, "Remove")]),
+          row("Show", null, sel(`rules.${i}.set`, setOpts, (v) => edit(i, (x) => (x.set = v)))),
+          r.kind === "time" ? [
+            row("On", null, el("div", {class: "days"}, DAYS.map(([d, t]) => el("button", {class: "btn" + ((r.days || []).includes(d) ? " primary" : ""), type: "button",
+              "aria-label": `rule ${i + 1} ${d}`, onclick: () => edit(i, (x) => { const ds = new Set(x.days || []); ds.has(d) ? ds.delete(d) : ds.add(d);
+                if (ds.size) x.days = DAYS.map(([dd]) => dd).filter((dd) => ds.has(dd)); })}, t)))),
+            row("From", null, el("input", {type: "time", value: r.start, "aria-label": `rule ${i + 1} start`, onchange: (e) => edit(i, (x) => (x.start = e.target.value))})),
+            row("Until", "Earlier than From: past midnight", el("input", {type: "time", value: r.end, "aria-label": `rule ${i + 1} end`, onchange: (e) => edit(i, (x) => (x.end = e.target.value))}))]
+          : [row("When", null, sel(`rules.${i}.event`, EVENTS, (v) => edit(i, (x) => (x.event = v)))),
+            row("For", "0 = while it lasts", [el("input", {type: "number", min: 0, max: 3600, value: r.secs || 0, "aria-label": `rule ${i + 1} secs`,
+              onchange: (e) => edit(i, (x) => (x.secs = Number(e.target.value)))}), el("span", {class: "val"}, "s")])]
+        )),
+        el("div", {class: "row"}, el("button", {class: "btn primary", type: "button", disabled: rules.length >= 12, "aria-label": "add rule",
+          onclick: () => save([...rules, {kind: "time", set: "clock", days: ["mon", "tue", "wed", "thu", "fri"], start: "07:00", end: "09:00"}])}, "Add a rule"),
+          el("small", {class: "note"}, `${rules.length} of 12`))),
+    ];
+  },
+  messages() {
+    const one = (i, fields) => { const a = Array(i + 1).fill(null); a[i] = fields; return change("custom", a); };
+    // a colour follows on the orbs while it's dragged (like the other colours); the picker's "done" sends it at once
+    const pickColour = (i, key, label, value) => el("input", {type: "color", value, "aria-label": `custom ${i} ${label}`,
+      oninput: (e) => { clearTimeout(debounced[`custom.${i}.${key}`]); const v = e.target.value; debounced[`custom.${i}.${key}`] = setTimeout(() => one(i, {[key]: v}), 200); },
+      onchange: (e) => { clearTimeout(debounced[`custom.${i}.${key}`]); one(i, {[key]: e.target.value}); }});
+    const toLocal = (t) => { if (!t) return ""; const d = new Date(t * 1000), z = (n) => String(n).padStart(2, "0");
+      return `${d.getFullYear()}-${z(d.getMonth() + 1)}-${z(d.getDate())}T${z(d.getHours())}:${z(d.getMinutes())}`; };
+    return [
+      el("div", {class: "card"}, el("h2", {}, "Your own faces"),
+        el("small", {class: "note"}, "A message or a countdown. They show on the Messages set (which one on which orb: Sets, Messages, ⚙) and can be picked as faces on the rig's sets."),
+        S.custom.map((c, i) => el("div", {class: "sub"},
+          row(`Message ${i + 1}`, null, seg(`custom.${i}.kind`, [["none", "Empty"], ["message", "Message"], ["countdown", "Countdown"]],
+            (v) => one(i, v !== "none" && c.kind === "none" && c.color === "#000000" ? {kind: v, color: "#ffffff", bg: "#000000"} : {kind: v}), c.kind)),
+          c.kind === "none" ? null : [
+            row("Small line on top", null, el("input", {type: "text", maxlength: 23, value: c.title, "aria-label": `custom ${i} title`,
+              onchange: (e) => one(i, {title: e.target.value})})),
+            row(c.kind === "message" ? "Message" : "What it counts down to", null, el("input", {type: "text", maxlength: 47, value: c.text,
+              "aria-label": `custom ${i} text`, onchange: (e) => one(i, {text: e.target.value})})),
+            c.kind === "countdown" ? row("When", "Your phone's time zone", el("input", {type: "datetime-local", value: toLocal(c.target),
+              "aria-label": `custom ${i} target`, onchange: (e) => { const t = Math.round(new Date(e.target.value).getTime() / 1000); if (t > 0) one(i, {target: t}); }})) : null,
+            c.kind === "message" ? row("Size", null, seg(`custom.${i}.size`, [["auto", "Auto"], ["small", "Small"], ["medium", "Medium"], ["big", "Big"]], (v) => one(i, {size: v}), c.size)) : null,
+            row("Text colour", null, pickColour(i, "color", "color", c.color)),
+            row("Background", null, pickColour(i, "bg", "bg", c.bg))]))),
+    ];
+  },
+  clock() {
+    const nixieOwn = get("clock.nixie_color") === "#000000";
+    return [
+      el("div", {class: "card"}, el("h2", {}, "Look"),
+        row("Style", "The middle button switches too", seg("clock.style", [["normal", "Normal"], ["nixie", "Nixie"]])),
+        row("Format", "Middle button held ½ s switches too", seg("clock.format", [["24", "24 h"], ["12", "12 h"], ["12ampm", "12 h + AM/PM"]])),
+        row("Second ticks", null, sw("clock.ticks")),
+        row("Colour", "Normal style", color("clock.color"), "clock.color"),
+        row("Shadow", "The faint 88:88 behind", [sw("clock.shadow"), color("clock.shadow_color")], "clock.shadow_color"),
+        row("Nixie colour", nixieOwn ? "the tubes' own orange" : "your colour", [
+          el("label", {class: "sw"}, el("input", {type: "checkbox", checked: !nixieOwn, "aria-label": "nixie own",
+            onchange: (e) => change("clock.nixie_color", e.target.checked ? "#ff7a1a" : "#000000")}), el("i")),
+          nixieOwn ? null : color("clock.nixie_color")], "clock.nixie_color")),
+      el("div", {class: "card"}, el("h2", {}, "Time"),
+        row("Time zone", null, sel("clock.tz", META.zones.map((z) => [z, z.replace(/_/g, " ")])), "clock.tz"),
+        row("Time server", "Also asks 1. and 2.pool.ntp.org", txt("clock.ntp", 39), "clock.ntp")),
+    ];
+  },
+  weather() {
+    const box = el("input", {type: "text", placeholder: "City, state, country", "aria-label": "place search", autocapitalize: "words",
+      style: "flex:1;width:auto;max-width:none", onkeydown: (e) => e.key === "Enter" && search()});
+    const results = el("div", {class: "results"});
+    const search = async () => {
+      const q = box.value.trim(); if (!q) return;
+      results.replaceChildren(el("small", {class: "note"}, "Asking OpenWeatherMap…"));
+      try {
+        const r = await api("/api/geocode?q=" + encodeURIComponent(q));
+        if (!r.ok || !r.places.length) { results.replaceChildren(el("small", {class: "note"}, r.error || "No place by that name")); return; }
+        results.replaceChildren(...r.places.map((p) => el("button", {class: "btn", type: "button",
+          onclick: () => change("weather", {city: p.name.slice(0, 23), lat: p.lat, lon: p.lon}).then(() => results.replaceChildren())},
+          `${p.name}${p.state ? ", " + p.state : ""}, ${p.country}  ·  ${p.lat.toFixed(3)}, ${p.lon.toFixed(3)}`)));
+      } catch (e) { results.replaceChildren(el("small", {class: "err"}, e.message)); }
+    };
+    return [
+      el("div", {class: "card"}, el("h2", {}, "Weather, Hourly and Sky"),
+        row("Weather sets", "Off: Weather, Hourly and Sky leave the rotation", sw("weather.enabled")),
+        row("Place", `${get("weather.city")} · ${Number(get("weather.lat")).toFixed(4)}, ${Number(get("weather.lon")).toFixed(4)}`, null),
+        el("div", {class: "row"}, el("div", {class: "ctl full wide"}, box, el("button", {class: "btn primary", type: "button", onclick: search}, "Find"))),
+        results,
+        row("Name shown", null, txt("weather.city", 23), "weather.city"),
+        row("Latitude", null, num("weather.lat", -90, 90, "any"), "weather.lat"),
+        row("Longitude", null, num("weather.lon", -180, 180, "any"), "weather.lon")),
+      el("div", {class: "card"}, el("h2", {}, "Look"),
+        row("Units", "Also the Weather radar set's forecast (the rest of the orbs: System tab)", seg("weather.units", [["imperial", "°F"], ["metric", "°C"]])),
+        row("Screens", null, seg("weather.dark", [[true, "Dark"], [false, "Light"]], (v) => change("weather.dark", v === true || v === "true"))),
+        row("Highs and lows swap every", "0 = no swap", [num("weather.hl_cycle_s", 0, 600), el("span", {class: "val"}, "s")], "weather.hl_cycle_s"),
+        row("New forecast every", "OpenWeatherMap's free allowance: plenty at 5 min or more", [num("weather.refresh_min", 5, 60), el("span", {class: "val"}, "min")], "weather.refresh_min")),
+    ];
+  },
+  matrix() {
+    return [el("div", {class: "card"}, el("h2", {}, "Matrix"),
+      row("Big font", null, sw("matrix.big_font")),
+      row("Rain colour", null, color("matrix.color"), "matrix.color"),
+      row("Leading character", null, color("matrix.head_color"), "matrix.head_color"),
+      row("Shortest line", null, num("matrix.line_min", 1, 30), "matrix.line_min"),
+      row("Longest line", null, num("matrix.line_max", 1, 40), "matrix.line_max"),
+      row("Slowest", "Pixels a frame", num("matrix.speed_min", 1, 30), "matrix.speed_min"),
+      row("Fastest", null, num("matrix.speed_max", 1, 40), "matrix.speed_max"),
+      row("Frame every", null, [num("matrix.frame_ms", 20, 1000), el("span", {class: "val"}, "ms")], "matrix.frame_ms"))];
+  },
+  rig() {
+    const camSel = (page, i) => {
+      const path = `rig.${page}`, cur = get(path).slice();
+      return sel(`${path}.${i}`, META.cams.map((c) => [c.id, c.title]), (v) => { cur[i] = v; change(path, cur); });
+    };
+    return [
+      el("div", {class: "card"}, el("h2", {}, "Drawn by the rig"),
+        el("small", {class: "note"}, "The rig follows these within a second while it's connected.")),
+      el("div", {class: "card"}, el("h2", {}, "Rig stats"),
+        row("Updates a second", null, seg("rig.rig_hz", [[1, "1"], [2, "2"], [4, "4"]], (v) => change("rig.rig_hz", Number(v)))),
+        row("Middle orb starts on", "The middle button goes round them", sel("rig.rig_middle", [["memory", "Memory and storage"], ["health", "Rig health"], ["power", "Power"], ["cooling", "Cooling"]])),
+        row("Electricity price", "Dollars a kWh, from your bill (0 = not set): the ENERGY face's cost an hour",
+          [el("span", {class: "val"}, "$"), num("rig.kwh_price", 0, 2, "any")], "rig.kwh_price")),
+      el("div", {class: "card"}, el("h2", {}, "Cameras"),
+        el("small", {class: "note"}, "Which camera on which orb. The middle button switches page."),
+        ...["cams_page1", "cams_page2"].flatMap((p, pi) => [el("h2", {}, `Page ${pi + 1}`),
+          ...[0, 1, 2, 3, 4].map((i) => row(`Orb ${i + 1}`, null, camSel(p, i)))]),
+        row("Picture quality", "Higher looks better, decodes a little slower", slider("rig.cam_quality", 60, 95), "rig.cam_quality"),
+        row("Frames a second from each camera", null, num("rig.cam_fps", 1, 15), "rig.cam_fps")),
+      el("div", {class: "card"}, el("h2", {}, "Temperature warnings"),
+        el("small", {class: "note"}, "Past its limit a face's colour turns to the warning colour, or pulses."),
+        [["cpu", "CPU"], ["gpu", "GPU"], ["ssd", "SSD"], ["ram", "RAM"]].map(([k, t]) => row(t, null,
+          [sw(`warnings.${k}.on`), num(`warnings.${k}.limit`, 30, 110), el("span", {class: "val"}, "°C"),
+           seg(`warnings.${k}.how`, [["colour", "Colour"], ["pulse", "Pulse"]])], `warnings.${k}.limit`))),
+      el("div", {class: "card"}, el("h2", {}, "Visualizer"),
+        row("Colour", null, seg("rig.viz_color", [["album", "Album"], ["rainbow", "Rainbow"], ["pick", "One colour"]],
+          (v) => change("rig.viz_color", v === "pick" ? "#4aff00" : v), /^#/.test(get("rig.viz_color")) ? "pick" : get("rig.viz_color"))),
+        /^#/.test(get("rig.viz_color")) ? row("The colour", null, color("rig.viz_color"), "rig.viz_color") : null),
+    ];
+  },
+  screens() {
+    const night = S.screens.night;
+    return [
+      el("div", {class: "card"}, el("h2", {}, "Brightness"),
+        row("Brightness", null, slider("screens.brightness", 10, 255, (v) => `${Math.round(v / 2.55)} %`), "screens.brightness")),
+      el("div", {class: "card"}, el("h2", {}, "Screen link"),
+        el("small", {class: "note"}, "How fast pictures go to the screens. Faster = smoother video and faces. If you see specks, lines or wrong colours on any orb, go back one step."),
+        row("Speed", null, seg("screens.link", [["normal", "Normal (42 MHz)"], ["fast", "Fast (62.5 MHz)"], ["fastest", "Fastest (125 MHz)"]]))),
+      el("div", {class: "card"}, el("h2", {}, "At night"),
+        row("At night", null, seg("screens.night.mode", [["off", "Same"], ["dim", "Dimmer"], ["dark", "Dark"]])),
+        night.mode !== "off" ? row("From", null, el("input", {type: "time", value: night.start, "aria-label": "night start", onchange: (e) => change("screens.night.start", e.target.value)}), "screens.night.start") : null,
+        night.mode !== "off" ? row("Until", null, el("input", {type: "time", value: night.end, "aria-label": "night end", onchange: (e) => change("screens.night.end", e.target.value)}), "screens.night.end") : null,
+        night.mode === "dim" ? row("Night brightness", null, slider("screens.night.brightness", 5, 255, (v) => `${Math.round(v / 2.55)} %`), "screens.night.brightness") : null),
+      el("div", {class: "card"}, el("h2", {}, "Each orb"),
+        el("small", {class: "note"}, "Turn an orb that sits sideways or upside down. Test shows its name and colour bars for 5 s."),
+        [0, 1, 2, 3, 4].map((i) => row(`Orb ${i + 1}`, null, [seg(`screens.rotation.${i}`, [[0, "0°"], [90, "90°"], [180, "180°"], [270, "270°"]],
+          (v) => { const r = S.screens.rotation.slice(); r[i] = Number(v); change("screens.rotation", r); }),
+          el("button", {class: "btn", type: "button", onclick: () => act({do: "test", orb: i}, `Orb ${i + 1}: test picture`)}, "Test")]))),
+      el("div", {class: "card"}, el("h2", {}, "Matching the orbs"),
+        el("small", {class: "note"}, "If one orb looks brighter or a different white, bring it down to match the others (a white picture helps: Test)."),
+        [0, 1, 2, 3, 4].map((i) => {
+          const trim = (field, ch) => {
+            const cur = (field === "brightness" ? S.screens.orbs[i].brightness : S.screens.orbs[i].gain[ch]);
+            const out = el("span", {class: "val"}, `${cur} %`);
+            return [el("input", {type: "range", min: 50, max: 100, value: cur, "aria-label": `orb ${i + 1} ${field}${ch == null ? "" : ch}`,
+              oninput: (e) => { out.textContent = `${e.target.value} %`; const o = deep(S.screens.orbs);
+                if (field === "brightness") o[i].brightness = Number(e.target.value); else o[i].gain[ch] = Number(e.target.value);
+                changeSoon("screens.orbs", o); }}), out];
+          };
+          return el("div", {class: "sub"}, el("h3", {}, `Orb ${i + 1}`),
+            row("Brightness", null, trim("brightness")), row("Red", null, trim("gain", 0)), row("Green", null, trim("gain", 1)), row("Blue", null, trim("gain", 2)));
+        })),
+    ];
+  },
+  system() {
+    const lr = ST.last_restart || {};
+    const file = el("input", {type: "file", accept: "application/json,.json", style: "display:none", onchange: async (e) => {
+      const f = e.target.files[0]; if (!f) return;
+      try { const j = JSON.parse(await f.text()); const r = await api("/api/settings", j.settings || j);
+        if (r.ok) { S = r.settings; toast("Settings restored"); } else toast(Object.values(r.errors)[0] || "Not restored", true); }
+      catch (err) { toast("That file isn't an orbs settings file", true); }
+      render();
+    }});
+    return [
+      el("div", {class: "card"}, el("h2", {}, "The XL"), el("div", {class: "grid"},
+        stat("Firmware", ST.build), stat("Up", upFor(ST.up_s)), stat("Chip", `${ST.temp_c.toFixed(1)} °C at ${ST.clk_mhz} MHz`),
+        stat("Memory", `${ST.heap_kb} KB in use`), stat("Last restart", lr.watchdog ? `watchdog (step ${lr.step}${lr.crash && lr.crash !== "0" ? ", crash " + lr.crash : ""})` : "normal"),
+        stat("Network", ST.wifi ? `${ST.wifi.mac}` : "–"))),
+      el("div", {class: "card"}, el("h2", {}, "Formats"),
+        row("Temperatures", "On the rig's faces (the weather has its own)", seg("formats.temp", [["C", "°C"], ["F", "°F"]])),
+        row("Dates", "On the rig's faces", seg("formats.date", [["mdy", "11/17"], ["dmy", "17/11"], ["ymd", "2026-11-17"]])),
+        row("Decimals", "On the rig's faces: 16.5 GB, 17 GB or 16.52 GB", seg("formats.decimals", [["none", "None"], ["auto", "As usual"], ["more", "One more"]]))),
+      presetsCard(),
+      el("div", {class: "card"}, el("h2", {}, "Settings"),
+        row("Save a copy", "A file with every setting (no passwords or keys)", el("a", {class: "btn", href: "/api/backup", download: "orbs-settings.json"}, "Download")),
+        row("Bring a copy back", null, [file, el("button", {class: "btn", type: "button", onclick: () => file.click()}, "Choose file")]),
+        row("Back to the defaults", "Wi-Fi, weather key and Frigate login stay", el("button", {class: "btn danger", type: "button",
+          onclick: () => confirm("Every setting back to its default?") && act({do: "defaults"}, "Defaults back").then(load)}, "Defaults")),
+        row("Restart the orbs", "About 10 s dark", el("button", {class: "btn danger", type: "button",
+          onclick: () => confirm("Restart the orbs now?") && act({do: "restart"}, "Restarting…")}, "Restart"))),
+      el("div", {class: "card"}, el("h2", {}, "Passwords and keys"),
+        el("small", {class: "note"}, "Not on this page. Over USB from a PC: orbs_xl.py wifi (Wi-Fi), orbs_xl.py key (weather), orbs_xl.py frigate (camera backup). If the orbs can't join Wi-Fi they open a setup hotspot; its password shows on the orbs.")),
+    ];
+  },
+};
+let PRESETS = null;
+async function loadPresets() { try { PRESETS = (await api("/api/presets")).presets; } catch (e) { PRESETS = []; } if (tab === "system" || tab === "now") render(); }
+async function presetDo(body, ok) {
+  try { const r = await api("/api/presets", body); PRESETS = r.presets; if (r.ok) { toast(ok); if (body.do === "apply") { await poll(); } } else toast(r.error || "The orbs said no", true); }
+  catch (e) { toast(e.message, true); }
+  render();
+}
+function presetsCard() {
+  if (PRESETS === null) { loadPresets(); return el("div", {class: "card"}, el("h2", {}, "Presets"), el("small", {class: "note"}, "Loading…")); }
+  const name = el("input", {type: "text", maxlength: 23, placeholder: "Name, e.g. Gaming", "aria-label": "preset name"});
+  const free = PRESETS.findIndex((p) => !p);
+  return el("div", {class: "card"}, el("h2", {}, "Presets"),
+    el("small", {class: "note"}, "A preset keeps the whole look: sets, faces, colours, brightness, rules. Applying one keeps your Wi-Fi, time zone and weather place."),
+    PRESETS.map((p, i) => p ? row(p.name, `Preset ${i + 1}`, [
+      el("button", {class: "btn primary", type: "button", "aria-label": `preset ${i} apply`, onclick: () => presetDo({do: "apply", slot: i}, `${p.name} on`)}, "Apply"),
+      el("button", {class: "btn", type: "button", "aria-label": `preset ${i} save`, onclick: () => confirm(`Save the current look into ${p.name}?`) && presetDo({do: "save", slot: i, name: p.name}, "Saved")}, "Save over"),
+      el("button", {class: "btn danger", type: "button", "aria-label": `preset ${i} delete`, onclick: () => confirm(`Delete ${p.name}?`) && presetDo({do: "delete", slot: i}, "Deleted")}, "Delete")]) : null),
+    el("div", {class: "row"}, name, el("button", {class: "btn primary", type: "button", disabled: free < 0, "aria-label": "preset save new",
+      onclick: () => name.value.trim() && presetDo({do: "save", slot: free, name: name.value.trim()}, "Preset saved")}, free < 0 ? "All 8 used" : "Save the look")));
+}
+function presetsQuick() {
+  if (PRESETS === null) { loadPresets(); return null; }
+  const have = PRESETS.map((p, i) => p ? [p, i] : null).filter(Boolean);
+  if (!have.length) return null;
+  return el("div", {class: "card"}, el("h2", {}, "Presets"), el("div", {class: "sets"}, have.map(([p, i]) =>
+    el("button", {type: "button", "aria-label": `preset ${i} quick`, onclick: () => presetDo({do: "apply", slot: i}, `${p.name} on`)}, p.name))));
+}
+function stat(t, v) { return el("div", {class: "stat"}, el("b", {}, t), el("span", {class: "mono"}, v ?? "–")); }
+
+function render() {
+  if (!S) return;
+  const focus = document.activeElement && document.activeElement.getAttribute("aria-label");
+  $("#tabs").replaceChildren(...TABS.map(([k, t]) => el("button", {class: tab === k ? "on" : "", type: "button",
+    onclick: () => { tab = k; try { localStorage.setItem("tab", k); } catch (e) {} render(); }}, t)));
+  drawTools();
+  $("#main").replaceChildren(el("section", {class: "on"}, VIEWS[tab]()));
+  if (focus) { const f = $(`[aria-label="${CSS.escape(focus)}"]`); if (f && f.type !== "range") f.focus({preventScroll: true}); }
+}
+function orbs() {
+  const box = $("#orbs");
+  if (!box.children.length) for (let i = 0; i < 5; i++) box.append(el("div", {class: "orb"}, el("img", {alt: `orb ${i + 1}`}), el("span", {}, `D${i + 1}`)));
+  // one after another (the XL serves a few connections at a time; five at once got some turned away)
+  if (orbsLoading) return;
+  orbsLoading = true;
+  const imgs = [...box.querySelectorAll("img")];
+  const next = (i) => {
+    if (i >= imgs.length) { orbsLoading = false; return; }
+    const n = new Image();
+    n.onload = () => { imgs[i].src = n.src; next(i + 1); };
+    n.onerror = () => next(i + 1);
+    n.src = `/api/orb/${i}?t=${Date.now()}`;
+  };
+  next(0);
+}
+let orbsLoading = false;
+let pointerDown = false;                      // (no redraw under a finger: a slider being dragged)
+document.addEventListener("pointerdown", () => (pointerDown = true), true);
+document.addEventListener("pointerup", () => (pointerDown = false), true);
+document.addEventListener("pointercancel", () => (pointerDown = false), true);
+const editing = () => pointerDown || (document.activeElement && /^(INPUT|SELECT|TEXTAREA)$/.test(document.activeElement.tagName));
+async function poll() {
+  try {
+    const r = await api("/api/state");
+    ST = r.status; META = r.meta;
+    if (!S || !editing()) S = r.settings;
+    online = true;
+  } catch (e) { online = false; }
+  $("#dot").className = "dot " + (online ? "ok" : "bad");
+  $("#conn").textContent = online ? `${ST.time} · ${setTitle(ST.showing)}` : "Not answering";
+  const b = $("#banner"); b.className = "banner" + (online ? "" : " on");
+  b.textContent = online ? "" : "The orbs aren't answering. Is the XL on and on the same Wi-Fi?";
+  if ((tab === "now" || tab === "system") && !editing()) render();
+  else if (!editing()) drawTools();
+}
+async function load() { await poll(); render(); orbs(); }
+try { tab = localStorage.getItem("tab") || "now"; } catch (e) {}
+if (!TABS.some(([k]) => k === tab)) tab = "now";
+load();
+setInterval(poll, 3000);
+setInterval(() => { if (!document.hidden) orbs(); }, 3000);
+</script>
+</body>
+</html>

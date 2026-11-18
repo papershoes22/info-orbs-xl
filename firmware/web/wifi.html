@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Info Orbs Wi-Fi</title>
+<style>
+:root{--bg:#0b0e14;--card:#141922;--card2:#1b2230;--line:#263043;--text:#e7ecf3;--dim:#93a0b4;--accent:#4aff00;--ink:#0b1400;--bad:#ff5a5f}
+*{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--text);font:17px/1.45 system-ui,-apple-system,sans-serif}
+.wrap{max-width:520px;margin:0 auto;padding:18px 16px 40px}
+h1{font-size:22px;margin:4px 0 6px}p{color:var(--dim);margin:6px 0 14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin:0 0 14px}
+.net{display:flex;justify-content:space-between;align-items:center;width:100%;text-align:left;font:inherit;color:var(--text);
+background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:12px;margin:6px 0;min-height:52px}
+.net.on{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}.net small{color:var(--dim)}
+label{display:block;margin:10px 0 4px;color:var(--dim);font-size:15px}
+input{width:100%;font:inherit;color:var(--text);background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:12px;min-height:48px}
+.row{display:flex;gap:8px}.row input{flex:1}
+button{font:inherit;min-height:48px;border-radius:10px;border:1px solid var(--line);background:var(--card2);color:var(--text);padding:0 14px}
+#go{width:100%;margin-top:14px;background:var(--accent);color:var(--ink);border-color:var(--accent);font-weight:650}
+#msg{margin-top:12px;color:var(--dim)}#msg.bad{color:var(--bad)}
+a{color:var(--accent)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>Info Orbs Wi-Fi setup</h1>
+<p>Pick your home Wi-Fi and type its password. The orbs keep it, close this hotspot and join; they show their new address when they're on.</p>
+<div class="card"><div id="nets"><small>Looking…</small></div></div>
+<div class="card">
+<label for="ssid">Network name</label>
+<input id="ssid" maxlength="32" autocapitalize="off" autocorrect="off" spellcheck="false">
+<label for="pw">Password</label>
+<div class="row"><input id="pw" type="password" maxlength="63" autocapitalize="off" autocorrect="off" spellcheck="false"><button id="show" type="button">Show</button></div>
+<button id="go" type="button">Join</button>
+<div id="msg" role="status" aria-live="polite"></div>
+</div>
+<p><a href="/settings">All the orbs' settings</a></p>
+</div>
+<script>
+"use strict";
+const $ = (s) => document.querySelector(s);
+const msg = (t, bad) => { $("#msg").textContent = t; $("#msg").className = bad ? "bad" : ""; };
+function bars(rssi) { return rssi >= -55 ? "▂▄▆█" : rssi >= -67 ? "▂▄▆" : rssi >= -78 ? "▂▄" : "▂"; }
+fetch("/api/wifi/networks", {cache: "no-store"}).then((r) => r.json()).then((d) => {
+  const box = $("#nets"); box.textContent = "";
+  if (!d.networks || !d.networks.length) { box.innerHTML = "<small>No networks found: type the name below.</small>"; return; }
+  for (const n of d.networks) {
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "net";
+    const name = document.createElement("span"); name.textContent = n.ssid;
+    const info = document.createElement("small"); info.textContent = (n.secured ? "🔒 " : "") + bars(n.rssi);
+    b.append(name, info);
+    b.onclick = () => { document.querySelectorAll(".net").forEach((x) => x.classList.remove("on")); b.classList.add("on");
+      $("#ssid").value = n.ssid; $("#pw").focus(); };
+    box.append(b);
+  }
+}).catch(() => { $("#nets").innerHTML = "<small>The orbs didn't answer.</small>"; });
+$("#show").onclick = () => { const p = $("#pw"); p.type = p.type === "password" ? "text" : "password"; $("#show").textContent = p.type === "password" ? "Show" : "Hide"; };
+$("#go").onclick = async () => {
+  const ssid = $("#ssid").value, pw = $("#pw").value;
+  if (!ssid || ssid.length > 32) return msg("The network name: 1 to 32 characters.", true);
+  if (pw && (pw.length < 8 || pw.length > 63)) return msg("A Wi-Fi password is 8 to 63 characters (or none for an open network).", true);
+  $("#go").disabled = true; msg("Sending…");
+  try {
+    const r = await (await fetch("/api/wifi", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({ssid, password: pw})})).json();
+    if (r.ok) { $("#pw").value = ""; msg(`Joining ${ssid}… This hotspot closes now and your phone goes back to its own Wi-Fi. Watch the orbs: they show their address when they're on, or this hotspot again (with the same password) if they can't join.`); }
+    else { msg(r.error || "The orbs said no.", true); $("#go").disabled = false; }
+  } catch (e) { msg("The orbs didn't answer: are you still on “Info Orbs Setup”?", true); $("#go").disabled = false; }
+};
+</script>
+</body>
+</html>

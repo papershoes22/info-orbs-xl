@@ -1,0 +1,396 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Info Orbs XL adapter build guide</title><style>
+@page { size: letter portrait; margin: 0.55in 0.6in 0.8in 0.6in; }
+body { font-family: "DejaVu Sans", "Noto Sans", Arial, sans-serif; font-size: 10.4pt; line-height: 1.34; color: #111;
+       background: #fff; margin: 0; }
+h1 { font-size: 20pt; margin: 0 0 2pt 0; }
+h2 { font-size: 14pt; margin: 12pt 0 5pt 0; border-bottom: 2px solid #111; padding-bottom: 2pt; break-after: avoid; }
+h3 { font-size: 11.5pt; margin: 9pt 0 3pt 0; break-after: avoid; }
+p { margin: 3pt 0 5pt 0; }
+.sub { color: #444; margin-bottom: 8pt; }
+.page { break-after: page; }
+ul.plain { margin: 2pt 0 6pt 0; padding-left: 16pt; }
+ul.plain li { margin: 2pt 0; }
+ul.chk { list-style: none; padding-left: 0; margin: 2pt 0 6pt 0; }
+ul.chk > li { padding-left: 22pt; text-indent: -22pt; margin: 2.5pt 0; break-inside: avoid; }
+ul.chk > li::before { content: "\2610"; font-size: 13pt; display: inline-block; width: 22pt; text-indent: 0; }
+ol.steps { list-style: none; padding-left: 0; margin: 0; }
+ol.steps > li { margin: 0 0 6pt 0; padding-left: 44pt; text-indent: -44pt; break-inside: avoid; }
+ol.steps > li > .id { display: inline-block; width: 44pt; text-indent: 0; font-weight: bold; font-size: 11pt; }
+ol.steps > li > .id::before { content: "\2610  "; font-weight: normal; font-size: 11pt; }
+ol.steps ul { text-indent: 0; margin: 2pt 0; padding-left: 14pt; }
+.check { border-left: 4px solid #2e7d32; padding: 1pt 0 1pt 7pt; margin: 3pt 0; text-indent: 0; display: block; }
+.stop { border: 2px solid #c62828; padding: 5pt 8pt; margin: 6pt 0; break-inside: avoid; }
+.note { background: #f1f1f1; padding: 5pt 8pt; margin: 6pt 0; break-inside: avoid; }
+table.names { border-collapse: collapse; width: 100%; margin: 4pt 0 6pt 0; font-size: 9.8pt; }
+table.names td { border-bottom: 1px solid #ccc; padding: 2.6pt 5pt; vertical-align: top; }
+table.names td:first-child { font-weight: bold; white-space: nowrap; width: 27%; }
+table.wires { border-collapse: collapse; width: 100%; font-size: 8.6pt; line-height: 1.26; }
+table.wires th { background: #222; color: #fff; padding: 3pt 4pt; text-align: left; }
+table.wires td { border-bottom: 1px solid #bbb; padding: 2.2pt 4pt; vertical-align: top; }
+table.wires tr { break-inside: avoid; }
+td.box { font-size: 12pt; width: 14pt; }
+td.num { font-weight: bold; font-size: 10.5pt; text-align: center; width: 26pt; }
+td.cut { font-weight: bold; white-space: nowrap; }
+.fig { text-align: center; margin: 4pt 0; break-inside: avoid; }
+.fig img { max-width: 100%; }
+.fig .cap { font-size: 8.8pt; color: #333; margin-top: 2pt; }
+.two { display: flex; gap: 14pt; align-items: flex-start; }
+.two > div { flex: 1; }
+.stepbox { display: flex; gap: 10pt; align-items: center; border-top: 1px solid #bbb; padding: 5pt 0; break-inside: avoid; }
+.steptext { flex: 0 0 40%; }
+.stepimg { flex: 1; text-align: center; }
+.stepimg img { max-width: 100%; }
+.sid { font-size: 13pt; font-weight: bold; }
+.big img { width: 100%; max-height: 9.1in; object-fit: contain; }
+</style></head><body>
+
+<div class="page">
+<h1>Info Orbs: XL adapter build guide</h1>
+<p class="sub">Every step, in order, with a drawing for each solder link. Made November 15, 2026, for Info Orbs
+whose board is printed "info orbs v0.2", and a Pimoroni Pico LiPo 2 XL W.</p>
+
+<h2>What you're building</h2>
+<ul class="plain">
+<li>The XL takes the ESP32's place in the orbs' socket. It sits on a small <b>adapter board</b> that plugs into that
+same socket. Nothing on the orbs board gets cut or changed, and the ESP32 can go back in any time.</li>
+<li>A short <b>cut USB-C cable</b> carries the USB data from the orbs' own USB-C port into the XL's USB-C, so a PC
+can feed the orbs over the cable instead of Wi-Fi.</li>
+<li>A taller base (hardware/base_xl_3mm.stl, 3 mm deeper) gives the XL room inside the case.</li>
+</ul>
+<div class="fig"><img src="renders/guide/g_side.png" style="width:82%"><div class="cap">The finished adapter from the side:
+4 header strips with their plastic on top, the XL on two of them.</div></div>
+
+<h2>How this guide works</h2>
+<ul class="plain">
+<li>8 parts, in order: <b>A</b> get the pieces ready, <b>B</b> socket strips, <b>C</b> the XL, <b>D</b> the 15 links
+underneath, <b>E</b> meter checks, <b>F</b> a powered test, <b>G</b> the cut cable, <b>H</b> fit it into the orbs.</li>
+<li>Tick each box as you finish it. Every link in part D has its own drawing with that link drawn in colour; the links
+you've already done are grey.</li>
+<li>Page 2 explains the names (the dot corner, the strips, pin numbers). Page 3 is the supplies and the link list.</li>
+<li>Two full-page drawings show the whole board: the top side (before part C) and all the links underneath (before part D).</li>
+<li>Time: about 2 hours (a guess). It can all be done on the bench before the orbs are opened.</li>
+</ul>
+<div class="stop"><b>Stop and find out why</b> (note the step number) if a meter reading doesn't match, a pin or part won't
+go in without force, or a wire comes out too short.</div>
+</div>
+
+<div class="page">
+<h2>Names used in every step</h2>
+<div class="two">
+<div><div class="fig"><img src="renders/guide/g_board.png"><div class="cap">The adapter board and its edges.</div></div></div>
+<div>
+<table class="names">
+<tr><td>adapter board</td><td>The piece of perfboard, 10 holes across, 27 holes along.</td></tr>
+<tr><td>dot corner</td><td>The corner you mark with a dot on BOTH sides (step A3). Everything is counted from it.</td></tr>
+<tr><td>dot end / far end</td><td>The short edge at the dot / the other short edge. The dot end goes at the orbs' case end.</td></tr>
+<tr><td>dot side / far side</td><td>The long edge at the dot / the other long edge.</td></tr>
+<tr><td>row 1 to 27</td><td>Rows of holes counted from the dot end. Row 1 is at the dot end.</td></tr>
+<tr><td>pin 1, pin 2 ...</td><td>Pins counted along a strip from the dot end. Pin 7 is always in row 7.</td></tr>
+</table>
+</div></div>
+<table class="names">
+<tr><td>dot-side socket strip</td><td>19 pins along the dot-side edge, rows 1-19. Plugs into the orbs' socket. Its pins
+carry the ESP32's names: 3V3, EN, SVP ... P13, SD2, SD3, CMD, 5V.</td></tr>
+<tr><td>far socket strip</td><td>19 pins along the far-side edge, rows 1-19. Names: GND, P23, P22 ... SD0, CLK.</td></tr>
+<tr><td>dot-side XL strip</td><td>27 pins in the 2nd column from the dot side, rows 1-27. The XL's "VB" row sits on it.</td></tr>
+<tr><td>far XL strip</td><td>27 pins in the 2nd column from the far side. The XL's "0" row sits on it.</td></tr>
+<tr><td>XL 34, XL VB, XL - ...</td><td>An XL pin, by the name printed beside its hole on the XL.</td></tr>
+<tr><td>empty hole</td><td>Where you pulled a pin out of an XL strip (step A5). It stays empty.</td></tr>
+<tr><td>the XL</td><td>The Pimoroni Pico LiPo 2 XL W.</td></tr>
+<tr><td>case USB board</td><td>The small green "V1297" board in the orbs with the USB-C port.</td></tr>
+<tr><td>the cut cable</td><td>A cut USB-C cable. Find its D+ and D- wires with the meter first (on ours green = D+, white = D-).</td></tr>
+<tr><td>top side / underside</td><td>Top = where the strips' plastic and the XL sit. Underside = where you solder.</td></tr>
+</table>
+<h3>The meter</h3>
+<ul class="plain">
+<li>Joined or not: dial on the <b>200</b> ohm setting, one probe on each point. <b>About 0</b> = joined. <b>1</b> on the
+left of the screen (or OL) = not joined.</li>
+<li>Volts (part F only): dial on <b>20</b> in the DC volts section, red probe on the plus point, black on the ground.</li>
+</ul>
+</div>
+
+<div class="page">
+<h2>Supplies</h2>
+<ul class="chk">
+<li>1 perfboard, at least 10 x 27 holes</li>
+<li>Male header strips, 2.54 mm (the usual black ones): enough for two pieces of 27 pins and two of 19 (three 40-pin strips)</li>
+<li>Solid-core hookup wire, 22-24 AWG: red 30 mm, black 40 mm, any other colour 55 mm</li>
+<li>Six 5 mm pieces of bare wire: cut resistor legs, or stripped solid core</li>
+<li>The cut USB-C cable</li>
+<li>Kapton tape, if you have it (optional)</li>
+<li>Soldering iron, solder, flush cutters, pliers, wire stripper, craft knife or saw, marker, the meter</li>
+</ul>
+<h2>Link list (part D)</h2>
+<p>Every link goes on the underside, from a socket strip pin to an XL strip pin. Each end is melted into the pin's own
+solder joint right at the board. Nothing goes through a hole.</p>
+<table class="wires">
+<tr><th></th><th>step</th><th>what</th><th>cut</th><th>from</th><th>to</th></tr>
+<tr><td class="box">&#9744;</td><td class="num" style="color:#1565c0">D1</td><td>bare link</td><td class="cut">5 mm bare</td><td>far socket pin 2 (P23, screens' clock)</td><td>far XL pin 2 (XL 34)</td></tr>
+<tr><td class="box">&#9744;</td><td class="num" style="color:#1565c0">D2</td><td>bare link</td><td class="cut">5 mm bare</td><td>far socket pin 6 (P21, screen D5 select)</td><td>far XL pin 6 (XL 31)</td></tr>
+<tr><td class="box">&#9744;</td><td class="num" style="color:#1565c0">D3</td><td>bare link</td><td class="cut">5 mm bare</td><td>far socket pin 8 (P19, screens' DC)</td><td>far XL pin 8 (XL 15)</td></tr>
+<tr><td class="box">&#9744;</td><td class="num" style="color:#1565c0">D4</td><td>bare link</td><td class="cut">5 mm bare</td><td>far socket pin 9 (P18, screens' reset)</td><td>far XL pin 9 (XL 14)</td></tr>
+<tr><td class="box">&#9744;</td><td class="num" style="color:#1565c0">D5</td><td>bare link</td><td class="cut">5 mm bare</td><td>dot-side socket pin 8 (P33, screen D2 select)</td><td>dot-side XL pin 8 (XL 16)</td></tr>
+<tr><td class="box">&#9744;</td><td class="num" style="color:#1565c0">D6</td><td>bare link</td><td class="cut">5 mm bare</td><td>dot-side socket pin 9 (P25, screen D4 select)</td><td>dot-side XL pin 9 (XL 17)</td></tr>
+<tr><td class="box">&#9744;</td><td class="num" style="color:#00838f">D7</td><td>short link</td><td class="cut">8 mm, 2 mm bare each end</td><td>dot-side socket pin 10 (P26, LFT button)</td><td>dot-side XL pin 11 (XL 18)</td></tr>
+<tr><td class="box">&#9744;</td><td class="num" style="color:#00838f">D8</td><td>short link</td><td class="cut">8 mm, 2 mm bare each end</td><td>dot-side socket pin 11 (P27, OK button)</td><td>dot-side XL pin 12 (XL 19)</td></tr>
+<tr><td class="box">&#9744;</td><td class="num" style="color:#00838f">D9</td><td>short link</td><td class="cut">8 mm, 2 mm bare each end</td><td>dot-side socket pin 12 (P14, RHT button)</td><td>dot-side XL pin 13 (XL 20)</td></tr>
+<tr><td class="box">&#9744;</td><td class="num" style="color:#00838f">D10</td><td>short link</td><td class="cut">8 mm, 2 mm bare each end</td><td>dot-side socket pin 15 (P13, screen D1 select)</td><td>dot-side XL pin 16 (XL 22)</td></tr>
+<tr><td class="box">&#9744;</td><td class="num" style="color:#b8860b">D11</td><td>wire, any colour</td><td class="cut">20 mm</td><td>dot-side socket pin 7 (P32, screen D3 select)</td><td>dot-side XL pin 4 (XL $46)</td></tr>
+<tr><td class="box">&#9744;</td><td class="num" style="color:#c62828">D12</td><td>wire, RED</td><td class="cut">27 mm</td><td>dot-side socket pin 19 (5V, USB 5 V)</td><td>dot-side XL pin 27 (XL VB)</td></tr>
+<tr><td class="box">&#9744;</td><td class="num" style="color:#b8860b">D13</td><td>wire, any colour</td><td class="cut">30 mm</td><td>far socket pin 11 (P17, screens' data)</td><td>far XL pin 18 (XL 7)</td></tr>
+<tr><td class="box">&#9744;</td><td class="num" style="color:#111111">D14</td><td>wire, BLACK</td><td class="cut">22 mm</td><td>far socket pin 1 (GND, USB ground)</td><td>far XL pin 5 (XL -)</td></tr>
+<tr><td class="box">&#9744;</td><td class="num" style="color:#111111">D15</td><td>wire, BLACK</td><td class="cut">17 mm</td><td>far socket pin 7 (GND, screens' ground)</td><td>far XL pin 5 (XL -), same joint as D14</td></tr>
+</table>
+</div>
+
+<div class="page">
+<h2>A. Get the pieces ready</h2>
+<ol class="steps">
+<li><span class="id">A1</span><b>Cut the adapter board:</b> count 10 holes across and 27 along. Score along the next line of holes
+(the 11th across, the 28th along) with a craft knife, several times on both sides, then snap it over a table edge
+(or saw along that line). Smooth the edges.<span class="check">Check: 10 x 27 whole holes.</span></li>
+<li><span class="id">A2</span><b>Find the underside:</b> if only one side has copper rings around the holes, that side is the
+underside (you solder on it). If both sides have them, either side will do.</li>
+<li><span class="id">A3</span><b>Mark the dot corner:</b> pick a corner and put a marker dot right beside its corner hole, on BOTH sides
+(the same corner, top and underside).</li>
+<li><span class="id">A4</span><b>Cut the header strips:</b> two pieces of 19 pins and two of 27. Cut through the plastic between two
+pins with flush cutters.<span class="check">Check: count the pins on each piece.</span></li>
+<li><span class="id">A5</span><b>Pull 4 pins out of the 27-pin strips.</b> Mark one end of each 27-pin strip with the marker: that end
+goes at the dot end later. Counting from the marked end:
+<ul><li>First strip = the <b>dot-side XL strip</b>: pull out pin 7.</li>
+<li>Second strip = the <b>far XL strip</b>: pull out pins 1, 7 and 11.</li></ul>
+Hold the plastic and pull the pin out with pliers.<span class="check">Check: dot-side XL strip 26 pins (gap at 7); far
+XL strip 24 pins (gaps at 1, 7, 11).</span></li>
+</ol>
+
+<h2>B. The socket strips (the part that plugs into the orbs)</h2>
+<ol class="steps">
+<li><span class="id">B1</span><b>Top side up, dot at the top left.</b> Push a 19-pin strip into the dot-side edge holes, starting at
+the dot corner hole, 19 holes along. The plastic stays on top; the long ends point down through the board.
+<span class="check">Careful: this is the OPPOSITE of the usual way to fit header strips. The first build had them the usual
+way round and had to heat each joint and push the pins through.</span></li>
+<li><span class="id">B2</span>Push the other 19-pin strip into the far-side edge holes, also starting at the dot end.
+<span class="check">Check: 8 empty holes are left past each strip at the far end, and 8 empty columns between them.</span></li>
+<li><span class="id">B3</span><b>Solder them:</b> turn the board over sideways, like a page, so it rests on the plastic. The dot is now
+at the top RIGHT. Solder all 38 pins: a small shiny joint on each pin, right at the board, no solder joining two pins.</li>
+<li><span class="id">B4</span><b>Trim the tops:</b> turn it back, top side up. Cut each pin's short top off flush with the plastic
+(38 cuts). The XL's edge sits right beside them later.</li>
+</ol>
+</div>
+
+<div class="page">
+<h2>C. The XL strips and the XL</h2>
+<p>Use the top-side drawing on the next page for this part.</p>
+<ol class="steps">
+<li><span class="id">C1</span><b>Top side up.</b> Push the dot-side XL strip (marked end at the dot end) into the 2nd column from the
+dot side, all 27 rows. Plastic on top, long ends down.</li>
+<li><span class="id">C2</span>Push the far XL strip (marked end at the dot end) into the 2nd column from the far side, all 27 rows.
+<span class="check">Check: 4 columns of pins, 6 empty columns in the middle, the red x gaps where the drawing shows them.</span></li>
+<li><span class="id">C3</span><b>Cut a notch for the XL's Wi-Fi module</b> (from the first build): the module on the XL's underside
+sits only about 0.1 mm above the board. Cut out the middle 4 columns of the first 3 rows at the dot end (keep 3 columns
+each side: links D14 and D11 run along the 3rd columns). With the notch, no Kapton is needed.</li>
+<li><span class="id">C4</span><b>Put the XL on its strips:</b> print facing UP, its USB-C at the FAR end (where the socket strips
+stop), its corner hole printed "VB" on the dot-side XL strip. Its other end hangs about 9 mm past the dot end (its
+antenna); the 3 holes on each side out there have no pins, which is right.
+<span class="check">Check: the short pin ends poke up through the XL's holes. The 4 gaps are under the XL holes printed
+"BT" (dot side) and "35", "+", "13" (far side).</span></li>
+<li><span class="id">C5</span><b>Solder the XL on its top:</b> 50 pins. No solder in the 4 empty holes.</li>
+<li><span class="id">C6</span>Turn over sideways (dot top right). Solder the XL strips' 50 pins on the underside, right at the board.</li>
+<li><span class="id">C7</span><b>First meter check</b> (200 ohm): one probe on the metal shell of the XL's USB-C, the other on far XL
+strip pin 5 (underside): <b>about 0</b>. Then dot-side XL strip pin 27 to the shell: <b>1</b>.
+<span class="check">If pin 5 shows 1, stop and find out why before any link.</span></li>
+</ol>
+</div>
+
+<div class="page big">
+<h2>Top side: where the 4 strips and the XL go (parts B and C)</h2>
+<div class="fig"><img src="renders/guide/g_top.png"></div>
+</div>
+
+<div class="page big">
+<h2>Underside: all 15 links of part D (dot at the top right)</h2>
+<p>Each link has its own step and drawing on the following pages. This page shows them all together, as a check at the end.</p>
+<div class="fig"><img src="renders/guide/g_under_all.png"></div>
+</div>
+
+<div class="page">
+<h2>D. The 15 links on the underside</h2>
+<div class="note"><b>Hold it the same way every time:</b> underside up, dot at the TOP RIGHT. Then the far socket strip is
+the left-hand edge column and the dot-side socket strip the right-hand one. Pins are counted from the top (the dot
+end). The labels beside each drawing are the socket pins' ESP32 names; bold ones get a link.</div>
+<ul class="plain">
+<li><b>Bare link</b> (blue): 5 mm of bare wire laid across two joints side by side.</li>
+<li><b>Short link</b> (teal): 8 mm insulated wire, 2 mm bare each end, slanting one row further.</li>
+<li><b>Wire</b> (gold, red, black): cut to length, 2 mm bare each end, bent to follow the route, lying flat.</li>
+<li>Every end is melted INTO the pin's joint. Never push a wire through a hole: nothing may poke up under the XL.</li>
+</ul>
+<div class="stepbox">
+<div class="steptext"><div class="sid" style="color:#1565c0">&#9744; D1</div>
+<p><b>From</b> far socket pin 2 (P23, screens' clock)<br><b>To</b> far XL pin 2 (XL 34)</p>
+<p>Cut a 5 mm piece of bare wire. Lay it flat across the two joints. Touch the iron to one joint until the wire sinks into it, then the other.</p>
+<p class="check">Check: tug it gently, it stays put; no solder joins it to a neighbouring pin.</p></div>
+<div class="stepimg"><img src="renders/guide/g_step_D1.png" style="width:2.83in;height:2.31in"></div></div>
+<div class="stepbox">
+<div class="steptext"><div class="sid" style="color:#1565c0">&#9744; D2</div>
+<p><b>From</b> far socket pin 6 (P21, screen D5 select)<br><b>To</b> far XL pin 6 (XL 31)</p>
+<p>Cut a 5 mm piece of bare wire. Lay it flat across the two joints. Touch the iron to one joint until the wire sinks into it, then the other.</p>
+<p class="check">Check: tug it gently, it stays put; no solder joins it to a neighbouring pin.</p></div>
+<div class="stepimg"><img src="renders/guide/g_step_D2.png" style="width:2.83in;height:2.31in"></div></div>
+<div class="stepbox">
+<div class="steptext"><div class="sid" style="color:#1565c0">&#9744; D3</div>
+<p><b>From</b> far socket pin 8 (P19, screens' DC)<br><b>To</b> far XL pin 8 (XL 15)</p>
+<p>Cut a 5 mm piece of bare wire. Lay it flat across the two joints. Touch the iron to one joint until the wire sinks into it, then the other.</p>
+<p class="check">Check: tug it gently, it stays put; no solder joins it to a neighbouring pin.</p></div>
+<div class="stepimg"><img src="renders/guide/g_step_D3.png" style="width:2.83in;height:2.31in"></div></div>
+<div class="stepbox">
+<div class="steptext"><div class="sid" style="color:#1565c0">&#9744; D4</div>
+<p><b>From</b> far socket pin 9 (P18, screens' reset)<br><b>To</b> far XL pin 9 (XL 14)</p>
+<p>Cut a 5 mm piece of bare wire. Lay it flat across the two joints. Touch the iron to one joint until the wire sinks into it, then the other.</p>
+<p class="check">Check: tug it gently, it stays put; no solder joins it to a neighbouring pin.</p></div>
+<div class="stepimg"><img src="renders/guide/g_step_D4.png" style="width:2.83in;height:2.31in"></div></div>
+<div class="stepbox">
+<div class="steptext"><div class="sid" style="color:#1565c0">&#9744; D5</div>
+<p><b>From</b> dot-side socket pin 8 (P33, screen D2 select)<br><b>To</b> dot-side XL pin 8 (XL 16)</p>
+<p>Cut a 5 mm piece of bare wire. Lay it flat across the two joints. Touch the iron to one joint until the wire sinks into it, then the other.</p>
+<p class="check">Check: tug it gently, it stays put; no solder joins it to a neighbouring pin.</p></div>
+<div class="stepimg"><img src="renders/guide/g_step_D5.png" style="width:2.83in;height:2.31in"></div></div>
+<div class="stepbox">
+<div class="steptext"><div class="sid" style="color:#1565c0">&#9744; D6</div>
+<p><b>From</b> dot-side socket pin 9 (P25, screen D4 select)<br><b>To</b> dot-side XL pin 9 (XL 17)</p>
+<p>Cut a 5 mm piece of bare wire. Lay it flat across the two joints. Touch the iron to one joint until the wire sinks into it, then the other.</p>
+<p class="check">Check: tug it gently, it stays put; no solder joins it to a neighbouring pin.</p></div>
+<div class="stepimg"><img src="renders/guide/g_step_D6.png" style="width:2.83in;height:2.31in"></div></div>
+<div class="stepbox">
+<div class="steptext"><div class="sid" style="color:#00838f">&#9744; D7</div>
+<p><b>From</b> dot-side socket pin 10 (P26, LFT button)<br><b>To</b> dot-side XL pin 11 (XL 18)</p>
+<p>Cut 8 mm of insulated wire and strip 2 mm off each end. Lay it flat, slanting from the socket pin to the XL pin one row further on. Melt each bare end into its joint. The insulation must not touch any other joint.</p>
+<p class="check">Check: tug it gently, it stays put; no solder joins it to a neighbouring pin.</p></div>
+<div class="stepimg"><img src="renders/guide/g_step_D7.png" style="width:2.88in;height:2.60in"></div></div>
+<div class="stepbox">
+<div class="steptext"><div class="sid" style="color:#00838f">&#9744; D8</div>
+<p><b>From</b> dot-side socket pin 11 (P27, OK button)<br><b>To</b> dot-side XL pin 12 (XL 19)</p>
+<p>Cut 8 mm of insulated wire and strip 2 mm off each end. Lay it flat, slanting from the socket pin to the XL pin one row further on. Melt each bare end into its joint. The insulation must not touch any other joint.</p>
+<p class="check">Check: tug it gently, it stays put; no solder joins it to a neighbouring pin.</p></div>
+<div class="stepimg"><img src="renders/guide/g_step_D8.png" style="width:2.90in;height:2.75in"></div></div>
+<div class="stepbox">
+<div class="steptext"><div class="sid" style="color:#00838f">&#9744; D9</div>
+<p><b>From</b> dot-side socket pin 12 (P14, RHT button)<br><b>To</b> dot-side XL pin 13 (XL 20)</p>
+<p>Cut 8 mm of insulated wire and strip 2 mm off each end. Lay it flat, slanting from the socket pin to the XL pin one row further on. Melt each bare end into its joint. The insulation must not touch any other joint.</p>
+<p class="check">Check: tug it gently, it stays put; no solder joins it to a neighbouring pin.</p></div>
+<div class="stepimg"><img src="renders/guide/g_step_D9.png" style="width:2.92in;height:2.90in"></div></div>
+<div class="stepbox">
+<div class="steptext"><div class="sid" style="color:#00838f">&#9744; D10</div>
+<p><b>From</b> dot-side socket pin 15 (P13, screen D1 select)<br><b>To</b> dot-side XL pin 16 (XL 22)</p>
+<p>Cut 8 mm of insulated wire and strip 2 mm off each end. Lay it flat, slanting from the socket pin to the XL pin one row further on. Melt each bare end into its joint. The insulation must not touch any other joint.</p>
+<p class="check">Check: tug it gently, it stays put; no solder joins it to a neighbouring pin.</p></div>
+<div class="stepimg"><img src="renders/guide/g_step_D10.png" style="width:2.97in;height:3.33in"></div></div>
+<div class="stepbox">
+<div class="steptext"><div class="sid" style="color:#b8860b">&#9744; D11</div>
+<p><b>From</b> dot-side socket pin 7 (P32, screen D3 select)<br><b>To</b> dot-side XL pin 4 (XL $46)</p>
+<p>Cut 20 mm of wire (any colour) and strip 2 mm off each end. Bend it to follow the drawing (over the empty XL hole 7, along the 3rd column from the dot side, back in at row 4), lying flat on the board. Melt one end into the socket pin's joint, then the other into the XL pin's joint. It doesn't go through any hole.</p>
+<p class="check">Check: tug it gently, it stays put; no solder joins it to a neighbouring pin.</p></div>
+<div class="stepimg"><img src="renders/guide/g_step_D11.png" style="width:2.83in;height:2.31in"></div></div>
+<div class="stepbox">
+<div class="steptext"><div class="sid" style="color:#c62828">&#9744; D12</div>
+<p><b>From</b> dot-side socket pin 19 (5V, USB 5 V)<br><b>To</b> dot-side XL pin 27 (XL VB)</p>
+<p>Cut 27 mm of RED wire and strip 2 mm off each end. Bend it to follow the drawing (down the 8 empty holes of the dot-side edge to the last row), lying flat on the board. Melt one end into the socket pin's joint, then the other into the XL pin's joint. It doesn't go through any hole.</p>
+<p class="check">Check: tug it gently, it stays put; no solder joins it to a neighbouring pin.</p></div>
+<div class="stepimg"><img src="renders/guide/g_step_D12.png" style="width:3.08in;height:4.80in"></div></div>
+<div class="stepbox">
+<div class="steptext"><div class="sid" style="color:#b8860b">&#9744; D13</div>
+<p><b>From</b> far socket pin 11 (P17, screens' data)<br><b>To</b> far XL pin 18 (XL 7)</p>
+<p>Cut 30 mm of wire (any colour) and strip 2 mm off each end. Bend it to follow the drawing (over the empty XL hole 11, along the 3rd column from the far side, back in at row 18), lying flat on the board. Melt one end into the socket pin's joint, then the other into the XL pin's joint. It doesn't go through any hole.</p>
+<p class="check">Check: tug it gently, it stays put; no solder joins it to a neighbouring pin.</p></div>
+<div class="stepimg"><img src="renders/guide/g_step_D13.png" style="width:3.00in;height:3.63in"></div></div>
+<div class="stepbox">
+<div class="steptext"><div class="sid" style="color:#111111">&#9744; D14</div>
+<p><b>From</b> far socket pin 1 (GND, USB ground)<br><b>To</b> far XL pin 5 (XL -)</p>
+<p>Cut 22 mm of BLACK wire and strip 2 mm off each end. Bend it to follow the drawing (over the empty XL hole 1, along the 3rd column from the far side, back in at row 5), lying flat on the board. Melt one end into the socket pin's joint, then the other into the XL pin's joint. It doesn't go through any hole.</p>
+<p class="check">Check: tug it gently, it stays put; no solder joins it to a neighbouring pin.</p></div>
+<div class="stepimg"><img src="renders/guide/g_step_D14.png" style="width:2.83in;height:2.31in"></div></div>
+<div class="stepbox">
+<div class="steptext"><div class="sid" style="color:#111111">&#9744; D15</div>
+<p><b>From</b> far socket pin 7 (GND, screens' ground)<br><b>To</b> far XL pin 5 (XL -), same joint as D14</p>
+<p>Cut 17 mm of BLACK wire and strip 2 mm off each end. Bend it to follow the drawing (over the empty XL hole 7, along the 3rd column from the far side, back in at row 5), lying flat on the board. Melt one end into the socket pin's joint, then the other into the XL pin's joint. It doesn't go through any hole.</p>
+<p class="check">Check: tug it gently, it stays put; no solder joins it to a neighbouring pin.</p></div>
+<div class="stepimg"><img src="renders/guide/g_step_D15.png" style="width:2.83in;height:2.31in"></div></div>
+</div>
+
+<div class="page">
+<h2>E. Meter checks (dial on 200 ohm)</h2>
+<p>Probe on the socket pin's long end (underside) and on the XL pin sticking up through the named hole (XL side).</p>
+<table class="wires">
+<tr><th></th><th>one probe</th><th>other probe</th><th>should show</th></tr>
+<tr><td class="box">&#9744;</td><td>far socket pin 2 (P23)</td><td>XL 34</td><td><b>about 0</b></td></tr>
+<tr><td class="box">&#9744;</td><td>far socket pin 6 (P21)</td><td>XL 31</td><td><b>about 0</b></td></tr>
+<tr><td class="box">&#9744;</td><td>far socket pin 8 (P19)</td><td>XL 15</td><td><b>about 0</b></td></tr>
+<tr><td class="box">&#9744;</td><td>far socket pin 9 (P18)</td><td>XL 14</td><td><b>about 0</b></td></tr>
+<tr><td class="box">&#9744;</td><td>far socket pin 11 (P17)</td><td>XL 7</td><td><b>about 0</b></td></tr>
+<tr><td class="box">&#9744;</td><td>far socket pin 1 (GND)</td><td>XL "-" (between 31 and 32)</td><td><b>about 0</b></td></tr>
+<tr><td class="box">&#9744;</td><td>far socket pin 7 (GND)</td><td>the same XL "-"</td><td><b>about 0</b></td></tr>
+<tr><td class="box">&#9744;</td><td>dot-side socket pin 7 (P32)</td><td>XL $46</td><td><b>about 0</b></td></tr>
+<tr><td class="box">&#9744;</td><td>dot-side socket pin 8 (P33)</td><td>XL 16</td><td><b>about 0</b></td></tr>
+<tr><td class="box">&#9744;</td><td>dot-side socket pin 9 (P25)</td><td>XL 17</td><td><b>about 0</b></td></tr>
+<tr><td class="box">&#9744;</td><td>dot-side socket pin 10 (P26)</td><td>XL 18</td><td><b>about 0</b></td></tr>
+<tr><td class="box">&#9744;</td><td>dot-side socket pin 11 (P27)</td><td>XL 19</td><td><b>about 0</b></td></tr>
+<tr><td class="box">&#9744;</td><td>dot-side socket pin 12 (P14)</td><td>XL 20</td><td><b>about 0</b></td></tr>
+<tr><td class="box">&#9744;</td><td>dot-side socket pin 15 (P13)</td><td>XL 22</td><td><b>about 0</b></td></tr>
+<tr><td class="box">&#9744;</td><td>dot-side socket pin 19 (5V)</td><td>XL VB</td><td><b>about 0</b></td></tr>
+<tr><td class="box">&#9744;</td><td>dot-side socket pin 19 (5V)</td><td>far socket pin 1 (GND)</td><td><b>1</b></td></tr>
+<tr><td class="box">&#9744;</td><td>far socket pin 7 (GND)</td><td>XL "+" (the empty hole between 15 and 31)</td><td><b>1</b></td></tr>
+<tr><td class="box">&#9744;</td><td>far socket strip, each pair side by side: pins 1-2, 2-3, 5-6, 6-7, 7-8, 8-9, 9-10, 10-11, 11-12</td><td>(9 pairs)</td><td><b>1</b> each</td></tr>
+<tr><td class="box">&#9744;</td><td>dot-side socket strip, each pair: pins 6-7, 7-8, 8-9, 9-10, 10-11, 11-12, 12-13, 14-15, 15-16, 18-19</td><td>(10 pairs)</td><td><b>1</b> each</td></tr>
+</table>
+<div class="stop">Any reading that doesn't match: stop and find the fault on that line first.</div>
+
+<h2>F. Powered test (adapter alone on the table)</h2>
+<ol class="steps">
+<li><span class="id">F1</span>Nothing touching the pins. Plug a USB cable from a PC into the XL's USB-C.</li>
+<li><span class="id">F2</span>Meter dial on <b>20 DC volts</b>. Red probe on dot-side socket pin 19 (5V), black on far socket pin 1
+(GND): <b>about 5</b> (4.7 to 5.2).</li>
+<li><span class="id">F3</span>Check the PC sees the XL (a new USB device). Then unplug it.</li>
+</ol>
+</div>
+
+<div class="page">
+<h2>G. The cut cable onto the case USB board</h2>
+<div class="two">
+<div>
+<ol class="steps">
+<li><span class="id">G1</span>Orbs unplugged and open, the board's back side up (the side the ESP32 is on).</li>
+<li><span class="id">G2</span>Cut the green and white wires to <b>35 mm</b> from where they leave the moulding. Strip 2 mm, tin
+the ends.</li>
+<li><span class="id">G3</span>Cut every other wire (and any braid or foil) back to 3 mm from the moulding and wrap them with tape so
+nothing bare shows.</li>
+<li><span class="id">G4</span>Twist the green and white wires together, 3 turns.</li>
+<li><span class="id">G5</span>On the case USB board, with its printed VCC label on the left: solder <b>GREEN</b> onto the tip of the
+middle pin next to GND, and <b>WHITE</b> onto the middle pin next to VCC.</li>
+<li><span class="id">G6</span>Meter (200 ohm): green's joint to the GND end pin <b>1</b>; white's joint to the VCC end pin
+<b>1</b>; green to white <b>1</b>.</li>
+</ol>
+</div>
+<div><div class="fig"><img src="renders/guide/g_usb.png"><div class="cap">Which pin gets which wire (on our unit a meter
+check found D+ next to GND, the opposite of the board's print: check yours).</div></div></div>
+</div>
+
+<h2>H. Fit it and try it</h2>
+<div class="fig"><img src="renders/guide/g_fit.png" style="width:86%"></div>
+<ol class="steps">
+<li><span class="id">H1</span>Orbs unplugged. Pull the ESP32 straight up out of the socket, rocking it gently end to end. Keep it.</li>
+<li><span class="id">H2</span>XL facing up. Turn the adapter so the <b>dot end is at the socket's "V1" end</b> and the XL's USB-C
+points toward the board's "!USB This Way!" print (the same way the ESP32's USB pointed). Line both socket strips up
+with the socket and press straight down evenly until it stops.<span class="check">Check: look along both sides:
+every pin is inside the socket, none outside.</span></li>
+<li><span class="id">H3</span>Plug the cut cable's plug into the XL's USB-C (either way up).</li>
+<li><span class="id">H4</span>Plug the orbs' usual USB-A-to-C cable into a PC (the orbs make no sound). Check
+the PC sees the XL through the orbs' port. The screens may light up blank, which is normal: their program comes next.</li>
+<li><span class="id">H5</span>Unplug. Put the new base on (the plug passes between its two middle posts) and fit the 4 screws (the same
+20 mm ones; the holes are 3 mm deeper, so the screwdriver must reach 11.5 mm in).</li>
+</ol>
+<div class="note"><b>Next:</b> load the firmware (firmware/README.md: hold BOOTSEL, copy orbs_xl.uf2).
+Until then the screens stay dark. The ESP32 can go back in at any time, its USB toward "!USB This Way!" as before.</div>
+</div>
+
+
+</body></html>

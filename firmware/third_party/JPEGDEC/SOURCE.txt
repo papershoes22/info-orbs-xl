@@ -1,0 +1,7 @@
+JPEGDEC 1.8.4 by Larry Bank (BitBank Software), Apache License 2.0 (LICENSE), https://github.com/bitbank2/JPEGDEC
+commit ae9705a. Copied 2026-11-16 unchanged (JPEGDEC.h, jpeg.inl) from the copy ESPHome fetched for the HA monitor
+(~/pico-games/ha-monitor/.esphome/pio_components/idf/5f31328f/bitbank2/JPEGDEC). Used only for the rig's pictures on
+the XL's second core (src/pics.cpp, src/jpegdec_glue.c); the XL's own sets keep TJpgDec (third_party/tjpgd_bodmer).
+One change (2026-11-16): "JD_RAM " in front of the 11 decoding functions (readRAM, JPEGGetMoreData, JPEGDecodeMCU,
+JPEGIDCT, JPEGPixelLE, JPEGPixel2LE, JPEGPutMCU11/22/12/21, DecodeJPEG) so they run from SRAM, and a 4-line
+#ifndef JD_RAM default at the top. Measured why: from flash they slowed from 46 to 61 ms while USB was busy.
