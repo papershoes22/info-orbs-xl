@@ -354,6 +354,8 @@ void settings_load(void)
 	{
 		memcpy(&settings, f, sizeof settings);
 		terminate_strings();
+		if(settings.link_speed > 1)
+			settings.link_speed = 0;         /* (the removed "fastest" screen link, 2026-11-19: back to normal) */
 		from_flash = true;
 		return;
 	}

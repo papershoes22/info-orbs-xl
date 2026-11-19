@@ -44,7 +44,7 @@ DEFAULTS = {
             "cams_page2": ["cam6", "cam7", "cam1", "cam2", "cam3"],
             "cam_quality": 86, "cam_fps": 8, "viz_color": "album"},
     "screens": {"brightness": 255, "night": {"mode": "off", "start": "22:00", "end": "07:00", "brightness": 40},
-                "rotation": [0, 0, 0, 0, 0], "orbs": [{"brightness": 100, "gain": [100, 100, 100]} for _ in range(5)]},
+                "rotation": [0, 0, 0, 0, 0], "orbs": [{"brightness": 100, "gain": [100, 100, 100]} for _ in range(5)], "link": "normal"},
     "formats": {"temp": "C", "date": "mdy", "decimals": "auto"},
     "rules": [],
     "warnings": {"cpu": {"on": True, "limit": 90, "how": "colour"}, "gpu": {"on": True, "limit": 85, "how": "colour"},
@@ -167,6 +167,7 @@ def check(s):
     sc = s["screens"]
     number("screens.brightness", sc["brightness"], 10, 255)
     one_of("screens.night.mode", sc["night"]["mode"], ["off", "dim", "dark"])
+    one_of("screens.link", sc.get("link", "normal"), ["normal", "fast"])
     for k in ("start", "end"):
         if not isinstance(sc["night"][k], str) or not HHMM.match(sc["night"][k]):
             e[f"screens.night.{k}"] = "a time like 22:00"

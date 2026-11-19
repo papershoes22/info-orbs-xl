@@ -37,8 +37,8 @@ extern const uint8_t wx_cloudsB[3629];  /* images/weather/dark/cloudsB.jpg */
 extern const uint8_t wx_cloudsW[4367];  /* images/weather/light/cloudsW.jpg */
 extern const uint8_t *const nixie_jpg[12];
 extern const size_t nixie_jpg_len[12];
-extern const uint8_t web_index_gz[15355];  /* web/index.html, gzip */
-#define web_index_gz_len ((size_t)15355)
+extern const uint8_t web_index_gz[15346];  /* web/index.html, gzip */
+#define web_index_gz_len ((size_t)15346)
 extern const uint8_t web_wifi_gz[2148];  /* web/wifi.html, gzip */
 #define web_wifi_gz_len ((size_t)2148)
 #ifdef __cplusplus

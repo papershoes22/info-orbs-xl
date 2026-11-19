@@ -6,7 +6,7 @@
 
 void lcd_init(void);                       /* resets and starts all five at once (all selected, as the original did) */
 uint32_t lcd_spi_hz(void);                 /* the SPI clock the XL really gives (the nearest at or under the asked) */
-uint32_t lcd_set_link(int level);            /* pictures' speed 0 41.7 / 1 62.5 / 2 125 MHz (Screens > Screen link) */
+uint32_t lcd_set_link(int level);            /* pictures' speed 0 41.7 / 1 62.5 MHz (Screens > Screen link) */
 /* sends rows y0..y1-1 of a whole 240x240 picture (byte-swapped RGB565) to screen `orb` (0-4 = D1-D5), by DMA;
    returns when it has all gone */
 void lcd_show_rows(int orb, const uint16_t *fb, int y0, int y1);

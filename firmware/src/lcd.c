@@ -33,7 +33,8 @@ static const uint8_t cs_pin[5] = { 22, 16, 46, 17, 31 };   /* D1-D5 (hardware/WI
 static int dma_ch = -1;
 static uint32_t spi_hz;
 /* the pictures' speed: LCD_HZ, or the settings page's Screens > "Screen link" (2026-11-18; the same GC9A01 chip
-   ran clean at 75 MHz in another project): 62.5 or 125 MHz from the 250 MHz clock */
+   ran clean at 75 MHz in another project): 62.5 MHz from the 250 MHz clock
+   (125 MHz was removed 2026-11-19) */
 static uint32_t pix_hz = LCD_HZ;
 /* the screens' bus is shared by both cores (the second one sends the rig's pictures): one at a time */
 static mutex_t bus;
@@ -159,11 +160,12 @@ uint32_t lcd_spi_hz(void)
 	return spi_hz;
 }
 
-/* the pictures' speed from now on: 0 = LCD_HZ (41.7 MHz), 1 = 62.5 MHz, 2 = 125 MHz (the SPI's clk_peri / 4 and / 2).
-   Commands keep LCD_CMD_HZ. Waits for whatever is on the bus to finish first. */
+/* the pictures' speed from now on: 1 = 62.5 MHz (the SPI's clk_peri / 4), anything else = LCD_HZ (41.7 MHz). (2 =
+   125 MHz was removed 2026-11-19: no faster pictures, and one orb striped after a test.) Commands keep LCD_CMD_HZ.
+   Waits for whatever is on the bus to finish first. */
 uint32_t lcd_set_link(int level)
 {
-	uint32_t hz = level == 2 ? 125000000u : level == 1 ? 62500000u : (uint32_t)LCD_HZ;
+	uint32_t hz = level == 1 ? 62500000u : (uint32_t)LCD_HZ;
 	mutex_enter_blocking(&bus);
 	pix_hz = hz;
 	spi_hz = spi_set_baudrate(LCD_SPI, pix_hz);

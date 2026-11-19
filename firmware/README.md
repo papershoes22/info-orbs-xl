@@ -139,5 +139,5 @@ the settings page (Now tab) before it's needed.
 - A full redraw of the four live system-stat faces: 261 ms on one core, 137 ms on both.
 - Live faces: about 50 frames a second; camera video from the PC: about 31 pictures a second over the five orbs.
 - Frigate pictures straight to the XL: 6.3-6.9 a second over the five orbs (one kept-open connection).
-- The screen link: 42 MHz (Normal), 62.5 or 125 MHz (Fast, Fastest); faster didn't help (the chip's decoding and
-  drawing are the limit) and once left one orb with stripes until a restart, so Normal is the default.
+- The screen link: 42 MHz (Normal) or 62.5 MHz (Fast). 125 MHz was tried and taken out: it didn't help (the chip's
+  decoding and drawing are the limit) and once left one orb with stripes until a restart. Normal is the default.

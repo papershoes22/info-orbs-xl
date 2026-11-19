@@ -487,7 +487,7 @@ const VIEWS = {
         row("Brightness", null, slider("screens.brightness", 10, 255, (v) => `${Math.round(v / 2.55)} %`), "screens.brightness")),
       el("div", {class: "card"}, el("h2", {}, "Screen link"),
         el("small", {class: "note"}, "How fast pictures go to the screens. Faster = smoother video and faces. If you see specks, lines or wrong colours on any orb, go back one step."),
-        row("Speed", null, seg("screens.link", [["normal", "Normal (42 MHz)"], ["fast", "Fast (62.5 MHz)"], ["fastest", "Fastest (125 MHz)"]]))),
+        row("Speed", null, seg("screens.link", [["normal", "Normal (42 MHz)"], ["fast", "Fast (62.5 MHz)"]]))),
       el("div", {class: "card"}, el("h2", {}, "At night"),
         row("At night", null, seg("screens.night.mode", [["off", "Same"], ["dim", "Dimmer"], ["dark", "Dark"]])),
         night.mode !== "off" ? row("From", null, el("input", {type: "time", value: night.start, "aria-label": "night start", onchange: (e) => change("screens.night.start", e.target.value)}), "screens.night.start") : null,

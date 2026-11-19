@@ -45,7 +45,7 @@ const char *const CAM_TITLES[N_CAMS_ALL] = { "Camera 1", "Camera 2", "Camera 3",
 static const char *const FORMATS[3] = { "24", "12", "12ampm" };
 static const char *const MIDDLES[4] = { "memory", "health", "power", "cooling" };
 static const char *const NIGHTS[3] = { "off", "dim", "dark" };
-static const char *const LINKS[3] = { "normal", "fast", "fastest" };   /* (screens.link, 2026-11-18) */
+static const char *const LINKS[2] = { "normal", "fast" };   /* (screens.link, 2026-11-18; "fastest" removed 2026-11-19) */
 
 int set_key_index(const char *key)
 {
@@ -150,7 +150,7 @@ void settings_to_json(const orbs_settings_t &s, JsonObject o)
 	}
 	JsonObject sc = o["screens"].to<JsonObject>();
 	sc["brightness"] = s.brightness;
-	sc["link"] = LINKS[s.link_speed <= 2 ? s.link_speed : 0];
+	sc["link"] = LINKS[s.link_speed == 1 ? 1 : 0];
 	JsonObject n = sc["night"].to<JsonObject>();
 	n["mode"] = NIGHTS[s.night_mode <= 2 ? s.night_mode : 0];
 	hhmm(b, s.night_start_min); n["start"] = b;
@@ -611,7 +611,7 @@ bool settings_patch(orbs_settings_t &s, JsonObjectConst p, JsonObject errors)
 	{
 		static const char *const K[] = { "brightness", "night", "rotation", "orbs", "link" };
 		unknown(c, o, "screens", K, 5);
-		if(!o["link"].isNull()) { int i = pick(o["link"].as<const char *>(), LINKS, 3); if(i < 0) c.bad("screens.link", "one of normal, fast, fastest"); else s.link_speed = (uint8_t)i; }
+		if(!o["link"].isNull()) { int i = pick(o["link"].as<const char *>(), LINKS, 2); if(i < 0) c.bad("screens.link", "one of normal, fast"); else s.link_speed = (uint8_t)i; }
 		if(!o["orbs"].isNull())
 		{
 			JsonArrayConst a = o["orbs"];

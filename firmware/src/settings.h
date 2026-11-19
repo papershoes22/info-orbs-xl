@@ -121,8 +121,9 @@ typedef struct {
 	uint32_t sets_seen;                    /* the sets the XL has met (0 = the first ten + Messages): a set the rig's
 	                                          catalogue names for the first time starts switched ON, once; switching it
 	                                          off on the page is kept (2026-11-17, from the spare bytes) */
-	uint8_t link_speed;                    /* the screens' picture speed: 0 normal (41.7 MHz), 1 fast (62.5), 2 fastest
-	                                          (125); the page's Screens > Screen link (2026-11-18, from the spare bytes) */
+	uint8_t link_speed;                    /* the screens' picture speed: 0 normal (41.7 MHz), 1 fast (62.5); the page's
+	                                          Screens > Screen link (2026-11-18, from the spare bytes). 2 was "fastest"
+	                                          (125 MHz), removed 2026-11-19: a saved 2 loads as 0 */
 	uint8_t pad_l[3];                      /* (keeps the rest where it was) */
 	uint8_t spare[116];          /* room for new settings without a new version (zeros = their defaults). A field taken
 	                                from here must leave the struct's size and the crc's place exactly as they are

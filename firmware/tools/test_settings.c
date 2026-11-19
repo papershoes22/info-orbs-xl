@@ -211,9 +211,11 @@ int main(void)
 	CHECK(d4, "v3: the new settings at their defaults (faces 1-5, own styles, global cycle and brightness, no trims, C, warnings 90/85/70/80, no rules, no own faces, buttons as always)");
 	CHECK(f->version == 4 && f->crc == crc32(f, offsetof(orbs_settings_t, crc)), "v3: saved back as version 4 with a good checksum");
 	settings.set_faces[11][2] = 7; settings.rules[3].kind = RULE_TIME; settings.rules[3].start_min = 600; settings.custom[1].kind = CUSTOM_COUNTDOWN;
-	strcpy(settings.custom[1].text, "Trip"); settings.orb_gain[4][1] = 93; settings.link_speed = 2;
+	strcpy(settings.custom[1].text, "Trip"); settings.orb_gain[4][1] = 93; settings.link_speed = 1;
 	settings_save(); memset(&settings, 0, sizeof settings); settings_load();
-	CHECK(settings.link_speed == 2 && settings.spare[0] == 0, "v4: the screen link (from the spare bytes) saves and reads back");
+	CHECK(settings.link_speed == 1 && settings.spare[0] == 0, "v4: the screen link (from the spare bytes) saves and reads back");
+	settings.link_speed = 2; settings_save(); memset(&settings, 0, sizeof settings); settings_load();
+	CHECK(settings_loaded_from_flash() && settings.link_speed == 0, "v4: a saved \"fastest\" screen link (removed 2026-11-19) loads as normal");
 	CHECK(settings_loaded_from_flash() && settings.set_faces[11][2] == 7 && settings.rules[3].start_min == 600 && settings.custom[1].kind == CUSTOM_COUNTDOWN &&
 	      strcmp(settings.custom[1].text, "Trip") == 0 && settings.orb_gain[4][1] == 93 && strcmp(settings.wifi_pass, "made-up-pass-333") == 0,
 	      "v4: the new settings save and read back");
