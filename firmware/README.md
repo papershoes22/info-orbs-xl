@@ -40,6 +40,13 @@ themselves `info-orbs` to the router). Tabs: **Now** (what each orb shows, press
 screen link speed), **System** (units, date format, presets, a backup file to download and restore, defaults,
 restart). "Try first" lets you try changes and put them back.
 
+**Which set shows after a restart:** Sets > "At start-up show" takes a fixed set, or the last one you picked (with a
+button, the settings page or `orbs_xl.py set`). Sets the orbs move to by themselves (the auto-cycle, a rule, moving on
+from a PC set when the PC's feed stops) aren't remembered. When the set is one of the PC's and its feed isn't there
+(after a power cut the orbs start long before the PC), or the feed stops while it shows (a PC reboot or sleep: the
+orbs keep their USB power), the orbs show the next set meanwhile and go back as soon as the feed returns, unless you
+pick another set first.
+
 The page never shows or accepts the Wi-Fi password, the weather key or a camera login, and it has **no login**:
 anyone on your home network can change the orbs' settings or press their buttons from it.
 

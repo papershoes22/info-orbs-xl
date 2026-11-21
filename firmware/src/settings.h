@@ -71,9 +71,10 @@ typedef struct {
 	uint16_t night_start_min;    /* minutes after midnight (dimStartHour) */
 	uint16_t night_end_min;      /* (dimEndHour) */
 	/* sets */
-	uint8_t current_set;         /* the set showing at power-off */
+	uint8_t current_set;         /* the set a person picked last (a button, the page, `orbs_xl.py set`): opened at start-up
+	                                with start_set 0xFF (2026-11-19; before: whatever showed at the last save) */
 	uint8_t set_order[N_SETS_SAVED];   /* set numbers in the rotation's order */
-	uint8_t start_set;           /* the set at start-up, 0xFF = the last one shown */
+	uint8_t start_set;           /* the set at start-up, 0xFF = the last one picked (current_set) */
 	uint32_t set_enabled;        /* bit per set number */
 	uint16_t cycle_s;            /* widgetCycDelay: next set every so many seconds, 0 = off */
 	/* weather (WeatherWidget, OpenWeatherMapFeed) */

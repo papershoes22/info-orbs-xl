@@ -209,6 +209,20 @@ static uint32_t night_wake_until;            /* a button pressed at night-dark: 
 static uint32_t overlay_until;               /* a test picture or the QR code is up: the set isn't drawn meanwhile */
 static int overlay_kind;                     /* 1 test picture, 2 the QR code, 3 the setup hotspot's screens */
 static uint32_t save_due_ms;                 /* a change from the page: saved to flash 3 s after the last one */
+/* the start-up set (2026-11-19): the set a person picked last (a button, the page's "show", `orbs_xl.py set`) is kept in
+   settings.current_set and opened at start-up when the page says "the last one you picked". Sets the orbs move to by
+   themselves (the auto-cycle, a rule, on from a rig set when the rig goes away) aren't kept, so they never wear the
+   flash and a restart goes back to your pick. Before: whatever showed at the last settings save. */
+static int picked_set = -1;                  /* the set a person picked last (-1: none yet) */
+static int saved_pick = -1;                  /* the pick the flash holds */
+static uint32_t pick_save_due_ms;            /* a pick: saved to flash 20 s after the last one (not while trying) */
+static int rig_waits = -1;                   /* a rig set waiting for the rig's feed: shown again as soon as the feed comes,
+                                                unless a person picks a set first. Two ways in: start-up on a rig set
+                                                before the feed is there (after a power cut the orbs start long before
+                                                the PC), and the feed stopping while a rig set shows (the PC rebooting
+                                                or asleep while the orbs keep their USB power, the feed program restarting;
+                                                2026-11-20: before, the orbs stayed on the set they'd moved to) */
+static bool rig_waits_start;                 /* (it came from start-up: for the log line) */
 /* the page's "try before saving" (version 4): changes show but aren't saved; back to the saved ones 30 s after the last
    change unless kept */
 static bool try_active;
@@ -216,6 +230,8 @@ static uint32_t try_until;
 static orbs_settings_t try_saved;
 /* rules (version 4): a time rule's or an event's set showing, and where to go back to */
 static int rule_active = -1, rule_back_set = -1;
+static orbs_rule_t rule_shown;               /* the rule showing, as it was when it came on: a change or removal of it on
+                                                the page is noticed (rules_poll, 2026-11-21) */
 static uint32_t rule_until;                  /* an event rule with seconds: back then (0 = when the event ends) */
 static bool rule_dark;                       /* a rule made the screens dark */
 /* the rig's catalogue of sets and faces (JSON, "U" kind CATALOG), for the page */
@@ -515,6 +531,24 @@ static void draw_set(bool force)
 	draws++;
 }
 
+/* a person picked the set showing now: remembered for the next start-up (saved 20 s after the last pick) */
+static void set_picked(void)
+{
+	picked_set = current_set;
+	settings.current_set = (uint8_t)current_set;
+	rig_waits = -1;
+	pick_save_due_ms = orbs_millis() + 20000;
+	if(!pick_save_due_ms)
+		pick_save_due_ms = 1;
+}
+
+/* the settings in memory always carry the pick (a preset, Defaults or a put-back try must not replace it) */
+static void keep_pick(void)
+{
+	if(picked_set >= 0 && picked_set < N_SETS)
+		settings.current_set = (uint8_t)picked_set;
+}
+
 static uint8_t target_brightness(void);
 static void rule_event(int ev, bool on);
 static void set_changed(void)
@@ -524,7 +558,6 @@ static void set_changed(void)
 	pics_cancel();                         /* pictures still queued for the old set are skipped */
 	pics_settle();                         /* (the second core finishes what it's on before anything is drawn here) */
 	step(33, (uint32_t)current_set);
-	settings.current_set = (uint8_t)current_set;
 	set_since_ms = orbs_millis();
 	{
 		uint8_t tb = target_brightness();      /* (a set with its own brightness: drawn at it) */
@@ -606,14 +639,14 @@ static bool do_button_action(uint8_t act, int bi, int ki)
 	if(act >= 0xC0 && act - 0xC0 < N_SETS)
 	{
 		int k = act - 0xC0;
-		if(set_available(k)) { current_set = k; set_changed(); }
+		if(set_available(k)) { current_set = k; set_changed(); set_picked(); }
 		return true;
 	}
 	switch(act)
 	{
 	case 1: return true;                                                 /* nothing */
-	case 2: current_set = next_set(current_set, -1); set_changed(); return true;
-	case 3: current_set = next_set(current_set, +1); set_changed(); return true;
+	case 2: current_set = next_set(current_set, -1); set_changed(); set_picked(); return true;
+	case 3: current_set = next_set(current_set, +1); set_changed(); set_picked(); return true;
 	case 4: show_qr(); return true;
 	case 5: manual_dark = !manual_dark; night_wake_until = 0; apply_brightness(true); return true;
 	case 6: case 7: case 8: case 9: case 12:                            /* the rig's: it does them */
@@ -695,11 +728,13 @@ static void button(int b, ButtonState st)
 	{
 		current_set = next_set(current_set, -1);
 		set_changed();
+		set_picked();
 	}
 	else if(b == BUTTON_RIGHT && st == BTN_SHORT)
 	{
 		current_set = next_set(current_set, +1);
 		set_changed();
+		set_picked();
 	}
 	else if(current_set == SET_CAMS && !cams_from_rig && b == BUTTON_OK && st == BTN_SHORT)
 		fgcams.nextPage();                     /* (the cameras from Frigate: the XL pages them itself) */
@@ -1115,6 +1150,7 @@ static void cmd_run(int n)
 		{
 			current_set = rx[1];
 			set_changed();
+			set_picked();
 			printf("SET %d\n", current_set);
 		}
 		else
@@ -1293,7 +1329,9 @@ static void save_settings(void)
 	step(32);
 	pics_settle_keep_live(true);             /* (no picture may be on its way from PSRAM while flash is written; the live
 	                                            faces keep going: the flash write pauses the second core itself) */
-	settings_save();
+	keep_pick();
+	if(settings_save())
+		saved_pick = settings.current_set;
 }
 
 /* ---- rules (version 4) ---- */
@@ -1302,16 +1340,27 @@ static void rule_show(int i, int set)
 	if(rule_active < 0)
 		rule_back_set = current_set;               /* (where to go back to) */
 	rule_active = i;
+	memcpy(&rule_shown, &settings.rules[i], sizeof rule_shown);
 	if(set == 0xFE)
 	{
 		rule_dark = true;
 		manual_dark = true;
 		apply_brightness(true);
 	}
-	else if(set < N_SETS && set_available(set) && set != current_set)
+	else
 	{
-		current_set = set;
-		set_changed();
+		if(rule_dark)
+		{                                          /* (a dark rule handing over to one with a set: the screens come on,
+			                                          2026-11-21; before, they stayed dark until that rule ended) */
+			rule_dark = false;
+			manual_dark = false;
+			apply_brightness(true);
+		}
+		if(set < N_SETS && set_available(set) && set != current_set)
+		{
+			current_set = set;
+			set_changed();
+		}
 	}
 	printf("EV RULE %d on: %s\n", i, set == 0xFE ? "dark" : set < N_SETS ? SET_KEYS[set] : "?");
 }
@@ -1329,10 +1378,20 @@ static void rule_end(void)
 		manual_dark = false;
 		apply_brightness(true);
 	}
-	if(rule_back_set >= 0 && rule_back_set != current_set && set_available(rule_back_set))
+	if(rig_waits >= 0 && set_available(rig_waits))
+		;                                      /* (a rig set waiting for the feed, which is back: the main loop goes straight
+		                                          there, no stop on the set the rule came from) */
+	else if(rule_back_set >= 0 && rule_back_set != current_set && set_available(rule_back_set))
 	{
 		current_set = rule_back_set;
 		set_changed();
+	}
+	else if(rule_back_set >= 0 && rule_back_set != current_set && rig_waits < 0 && set_rig[rule_back_set] >= 0 &&
+	        (settings.set_enabled >> rule_back_set & 1) && !rig.alive(orbs_millis()))
+	{
+		rig_waits = rule_back_set;             /* (a rig set and the rig's feed stopped meanwhile: back to it when it comes) */
+		rig_waits_start = false;
+		printf("EV RULE back to %s when the rig's feed is\n", SET_KEYS[rule_back_set]);
 	}
 	rule_back_set = -1;
 }
@@ -1349,7 +1408,7 @@ static void rule_event(int ev, bool on)
 		{
 			rule_show(i, r.set);
 			rule_until = r.secs ? orbs_millis() + r.secs * 1000u : 0;
-			if(!rule_until) rule_until = 0;
+			if(r.secs && !rule_until) rule_until = 1;   /* (a timer that lands on 0 would never end it) */
 		}
 		else if(rule_active == i && !settings.rules[i].secs)
 			rule_end();
@@ -1361,7 +1420,25 @@ static void rule_event(int ev, bool on)
 static void rules_poll(uint32_t now)
 {
 	static uint32_t next;
-	if(rule_active >= 0 && settings.rules[rule_active].kind == RULE_EVENT && rule_until && (int32_t)(now - rule_until) >= 0)
+	/* the rule showing changed or removed (the page, a preset, Defaults, a try put back): looked at again now. Before
+	   2026-11-21 it was left on: a removed time rule's set stayed until a restart, and an event rule removed or moved
+	   to another place in the list never ended. A changed time rule that still holds shows again (its new set); one
+	   that no longer does, or a changed event rule, ends (an event rule comes on again at its next event). */
+	static bool stale;
+	if(rule_active < 0)
+		stale = false;
+	else if(!stale && memcmp(&settings.rules[rule_active], &rule_shown, sizeof rule_shown))
+	{
+		stale = true;
+		next = now;
+		printf("EV RULE %d changed or removed: looked at again\n", rule_active);
+	}
+	if(stale && !orbs_time_synced())
+	{
+		stale = false;                         /* (no clock to look again by: over) */
+		rule_end();
+	}
+	if(rule_active >= 0 && !stale && settings.rules[rule_active].kind == RULE_EVENT && rule_until && (int32_t)(now - rule_until) >= 0)
 		rule_end();
 	if((int32_t)(now - next) < 0 || !orbs_time_synced())
 		return;
@@ -1378,11 +1455,12 @@ static void rules_poll(uint32_t now)
 		bool in = r.start_min <= r.end_min ? (m >= r.start_min && m < r.end_min) : (m >= r.start_min || m < r.end_min);
 		if(in) hit = i;
 	}
-	bool time_rule_on = rule_active >= 0 && settings.rules[rule_active].kind == RULE_TIME;
-	if(hit >= 0 && rule_active != hit && (rule_active < 0 || time_rule_on))
-		rule_show(hit, settings.rules[hit].set);
+	bool time_rule_on = rule_active >= 0 && (stale || settings.rules[rule_active].kind == RULE_TIME);
+	if(hit >= 0 && (rule_active != hit || stale) && (rule_active < 0 || time_rule_on))
+		rule_show(hit, settings.rules[hit].set);   /* (a stale rule handing over: its way back is kept) */
 	else if(hit < 0 && time_rule_on)
 		rule_end();
+	stale = false;
 	/* the rig gone (its feed stopped: asleep or off): a rig_sleep rule acts as its event */
 	static bool rig_was = true;
 	bool rig_now = rig.alive(now);
@@ -1896,7 +1974,7 @@ bool web_apply(const orbs_settings_t &next)
 		current_set = next_set(current_set, +1);       /* (the set showing was switched off) */
 		redraw = true;
 	}
-	settings.current_set = (uint8_t)current_set;
+	keep_pick();                                       /* (the start-up pick, not whatever shows: 2026-11-19) */
 	settings_version++;
 	if(try_active)
 		try_until = orbs_millis() + 30000;             /* (trying: shown, not saved; 30 s after the last change it goes back) */
@@ -1926,6 +2004,7 @@ bool web_action(JsonObjectConst a, char *why, size_t n)
 		manual_dark = false;
 		current_set = k;
 		set_changed();
+		set_picked();
 		return true;
 	}
 	if(!strcmp(d, "dark"))
@@ -2188,6 +2267,8 @@ int main(void)
 	for(int o = 0; o < N_ORB_FB; o++)
 		orb_fb[o] = fb_psram[o];
 	settings_load();
+	if(settings.current_set < N_SETS)
+		picked_set = saved_pick = settings.current_set;   /* (the start-up pick, 2026-11-19) */
 	camlogin_load();
 	load_clock_settings();
 	frigate_tz = &tz;
@@ -2297,10 +2378,19 @@ int main(void)
 			save_due_ms = 0;
 			save_settings();                   /* (the page's changes, 3 s after the last one) */
 		}
+		if(pick_save_due_ms && (int32_t)(now - pick_save_due_ms) >= 0 && !try_active)
+		{
+			pick_save_due_ms = 0;              /* (a picked set, 20 s after the last pick; only if the flash holds another) */
+			if(picked_set >= 0 && picked_set != saved_pick)
+			{
+				printf("EV PICK saved: %s opens at start-up\n", SET_KEYS[picked_set]);
+				save_settings();
+			}
+		}
 		if(restart_at && (int32_t)(now - restart_at) >= 0)
 		{
 			pics_settle();
-			if(save_due_ms)
+			if(save_due_ms || (pick_save_due_ms && !try_active && picked_set != saved_pick))
 				save_settings();
 			watchdog_reboot(0, 0, 10);
 			for(;;)
@@ -2447,12 +2537,23 @@ int main(void)
 		else
 		{
 			int64_t s = orbs_time_now();
+			if(rig_waits >= 0 && !(settings.set_enabled >> rig_waits & 1))
+				rig_waits = -1;                    /* (its set was switched off meanwhile: nothing to go back to) */
 			if(!shown_set)
 			{
 				shown_set = true;
 				status_shown[0] = 0;
 				int want = settings.start_set < N_SETS ? settings.start_set : settings.current_set;   /* (the page's "at start-up") */
 				current_set = want < N_SETS && set_available(want) ? want : next_set(want < N_SETS ? want : SET_CLOCK, +1);
+				rig_waits = -1;
+				if(want < N_SETS && current_set != want && set_rig[want] >= 0 && (settings.set_enabled >> want & 1))
+				{
+					rig_waits = want;              /* (a rig set before the rig's feed is there: it comes up when the feed does) */
+					rig_waits_start = true;
+					printf("EV FIRST SET %s waits for the rig: %s meanwhile\n", SET_KEYS[want], SET_KEYS[current_set]);
+				}
+				else
+					printf("EV FIRST SET %s\n", SET_KEYS[current_set]);
 				shown_brightness = 255;
 				apply_brightness(true);            /* (night or day brightness; draws the set) */
 				last_shown_s = s;
@@ -2467,6 +2568,16 @@ int main(void)
 				printf("EV RIG gone: the cameras from Frigate\n");
 				set_changed();
 			}
+			else if(rig_waits >= 0 && set_available(rig_waits) && rule_active < 0 && !overlay_until)
+			{                                      /* (before the cameras' own "back" below: straight to the waiting set) */
+				printf(rig_waits_start ? "EV RIG here: the first set %s\n" : "EV RIG here: back to %s\n", SET_KEYS[rig_waits]);
+				if(current_set != rig_waits)
+				{
+					current_set = rig_waits;
+					set_changed();
+				}
+				rig_waits = -1;
+			}
 			else if(current_set == SET_CAMS && !cams_from_rig && rig.alive(now))
 			{
 				printf("EV RIG back: the cameras from the rig\n");
@@ -2474,8 +2585,16 @@ int main(void)
 			}
 			else if(set_rig[current_set] >= 0 && !rig.alive(now) && !(current_set == SET_CAMS && !cams_from_rig))
 			{
+				int left = current_set;
 				current_set = next_set(current_set, +1);
-				printf("EV RIG gone: on to %s\n", SET_KEYS[current_set]);
+				if(rig_waits < 0 && rule_active < 0)
+				{                                  /* (a rule's set: the rule's own way back covers it, see rule_end) */
+					rig_waits = left;
+					rig_waits_start = false;
+					printf("EV RIG gone: on to %s, back to %s when the feed is\n", SET_KEYS[current_set], SET_KEYS[left]);
+				}
+				else
+					printf("EV RIG gone: on to %s\n", SET_KEYS[current_set]);
 				set_changed();
 			}
 			else if(overlay_until && (int32_t)(now - overlay_until) >= 0)

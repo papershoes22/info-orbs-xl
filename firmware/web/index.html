@@ -329,7 +329,7 @@ const VIEWS = {
            sw(`sets.enabled.${k}`)]), openSet === k ? setPanel(k) : null])),
       el("div", {class: "card"}, el("h2", {}, "Going round by themselves"),
         row("Next set every", "0 = stay on one set", [num("sets.cycle_s", 0, 3600), el("span", {class: "val"}, "s")], "sets.cycle_s"),
-        row("At start-up show", null, sel("sets.start", [["last", "the last one shown"], ...order.map((k) => [k, setTitle(k)])]), "sets.start")),
+        row("At start-up show", null, sel("sets.start", [["last", "the last one you picked"], ...order.map((k) => [k, setTitle(k)])]), "sets.start")),
     ];
   },
   rules() {
